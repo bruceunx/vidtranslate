@@ -1,70 +1,83 @@
-#![allow(unused)]
+#![allow(dead_code)]
 
-use async_std::task;
-use sqlx::sqlite::SqliteQueryResult;
-use sqlx::types::time::Date;
-use sqlx::{migrate::MigrateDatabase, FromRow, Pool, Sqlite, SqlitePool};
+use rusqlite::Connection;
+use serde::{Deserialize, Serialize};
+use tauri::Result;
 
-#[derive(FromRow, Debug)]
-pub struct Employee {
-    id: i32,
-    name: String,
-    birth_date: Date,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub(crate) struct DataEntry {
+    pub(crate) name: String,
+    pub(crate) age: i32,
 }
 
-pub async fn connect() -> Result<Pool<Sqlite>, sqlx::Error> {
-    const DB_URL: &str = "sqlite://db.sqlite";
-    if !Sqlite::database_exists(DB_URL).await.unwrap_or(false) {
-        match Sqlite::create_database(DB_URL).await {
-            Ok(_) => println!("Database created"),
-            Err(e) => eprintln!("Error creating database: {:?}", e),
-        }
-    }
-    return SqlitePool::connect(DB_URL).await;
+#[tauri::command]
+pub(crate) fn init_db() -> Result<()> {
+    let conn = Connection::open("db.sqlite").unwrap();
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS data (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER NOT NULL
+        )",
+        [],
+    )
+    .unwrap();
+    Ok(())
 }
 
-pub async fn init_db() -> Pool<Sqlite> {
-    let db = connect().await.unwrap();
-
-    sqlx::query("CREATE TABLE IF NOT EXISTS employee (id INTEGER PRIMARY KEY NOT NULL, name Char(100) NOT NULL, birth_date Date NOT NULL);").execute(&db).await.unwrap();
-    return db;
-
-    // let _date = date!(2022 - 10 - 10);
-    // println!("date: {:?}", &_date);
-    //
-    // let result = sqlx::query("INSERT INTO employee (name, birth_date) VALUES (?, ?);")
-    //     .bind("bobby1")
-    //     .bind(&_date)
-    //     .execute(&db)
-    //     .await;
-    // println!("insert dat result: {:?}, {:?}", &_date, result);
-
-    // let employee = sqlx::query_as::<_, Employee>("SELECT * FROM employee;")
-    //     .fetch_all(&db)
-    //     .await
-    //     .unwrap();
-    //
-    // for e in employee {
-    //     println!("Employee: {:?}", e);
-    // }
+#[tauri::command]
+pub(crate) fn insert_data(entry: &DataEntry) -> Result<()> {
+    let conn = Connection::open("db.sqlite").unwrap();
+    conn.execute(
+        "INSERT INTO data (name, age) VALUES (?1, ?2)",
+        [entry.name.to_string(), entry.age.to_string()],
+    )
+    .unwrap();
+    println!("Data inserted");
+    Ok(())
 }
 
-pub async fn insert_employee(
-    db: &Pool<Sqlite>,
-    name: String,
-    birth_date: &Date,
-) -> Result<SqliteQueryResult, sqlx::Error> {
-    sqlx::query("INSERT INTO employee (name, birth_date) VALUES (?, ?);")
-        .bind(name)
-        .bind(birth_date)
-        .execute(db)
-        .await
-}
-
-pub async fn query_all_employee(db: &Pool<Sqlite>) -> Vec<Employee> {
-    let employee = sqlx::query_as::<_, Employee>("SELECT * FROM employee;")
-        .fetch_all(db)
-        .await
+#[tauri::command]
+pub(crate) fn get_all_data() -> Result<Vec<DataEntry>> {
+    let conn = Connection::open("db.sqlite").unwrap();
+    let mut stmt = conn.prepare("SELECT name, age FROM data").unwrap();
+    let data_iter = stmt
+        .query_map([], |row| {
+            Ok(DataEntry {
+                name: row.get(0)?,
+                age: row.get(1)?,
+            })
+        })
         .unwrap();
-    return employee;
+    let mut data = Vec::new();
+    for entry in data_iter {
+        data.push(entry.unwrap());
+    }
+    Ok(data)
+}
+
+#[tauri::command]
+pub(crate) fn update_data(entry: &DataEntry, id: i32) -> Result<()> {
+    let conn = Connection::open("db.sqlite").unwrap();
+    conn.execute(
+        "UPDATE data SET name = ?1, age = ?2 WHERE id = ?3",
+        [
+            entry.name.to_string(),
+            entry.age.to_string(),
+            id.to_string(),
+        ],
+    )
+    .unwrap();
+    println!("Data updated id = {}", id);
+    Ok(())
+}
+
+#[tauri::command]
+pub(crate) fn delete_data(id: i32) -> Result<()> {
+    let conn = Connection::open("db.sqlite").unwrap();
+    conn.execute("DELETE FROM data WHERE id = ?1", [id.to_string()])
+        .unwrap();
+    println!("Data deleted id = {}", id);
+    Ok(())
 }

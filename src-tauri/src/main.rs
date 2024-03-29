@@ -1,15 +1,13 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod db;
-use async_std::task;
 use tauri::Window;
-// use time::macros::date;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
     message: String,
 }
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -22,7 +20,6 @@ fn new_greet(name: &str) -> String {
 
 #[tauri::command]
 fn stream_greet(window: Window, name: &str) {
-    // println!("{}", &name);
     let new_name = name.to_string();
     std::thread::spawn(move || {
         for i in 0..10 {
@@ -45,19 +42,23 @@ fn stream_greet(window: Window, name: &str) {
 }
 
 fn main() {
-    let db = task::block_on(db::connect()).unwrap();
-    // let name = "Jack";
-    // let date = date!(2024 - 10 - 10);
-    // let result = task::block_on(db::insert_employee(&db, name.to_string(), &date));
-    // match result {
-    //     Ok(_) => println!("insert ok"),
-    //     Err(e) => eprintln!("insert failed, {}", e),
-    // }
+    db::init_db().unwrap();
+    // let entry = db::DataEntry {
+    //     name: "Jack".to_string(),
+    //     age: 23,
+    // };
+    // db::insert_data(&entry).unwrap();
+    //
+    // let new_entry = db::DataEntry {
+    //     name: "Lily".to_string(),
+    //     age: 25,
+    // };
+    // db::update_data(&new_entry, 1).unwrap();
+    // db::delete_data(2).unwrap();
 
-    let employee = task::block_on(db::query_all_employee(&db));
-
-    for e in employee {
-        println!("Employee: {:?}", e);
+    let all_data = db::get_all_data().unwrap();
+    for data in &all_data {
+        println!("{:?}", data);
     }
 
     tauri::Builder::default()
