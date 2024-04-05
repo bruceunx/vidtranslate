@@ -28,8 +28,7 @@
     },
     "windows": [
       {
-        "decorations": true,
-        "hiddenTitle": true,
+        "decorations": false,
         "title": "llama-rust-desktop",
         "width": 1000,
         "height": 600
