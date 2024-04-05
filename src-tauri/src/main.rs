@@ -18,15 +18,14 @@ fn new_greet(name: &str) -> String {
     format!("Hello friend, {}! You've been greeted from Rust!", name)
 }
 
-#[tauri::command]
-fn stream_greet(window: Window, name: &str) {
-    let new_name = name.to_string();
+#[tauri::command(rename_all = "snake_case")]
+fn stream_greet(window: Window, name_str: String) {
     std::thread::spawn(move || {
         for i in 0..10 {
             let _ = window.emit(
                 "greet",
                 Payload {
-                    message: format!("Hello, {}! You've been greeted from Rust! {}", new_name, i),
+                    message: format!("Hello, {}! You've been greeted from Rust! {}", name_str, i),
                 },
             );
             std::thread::sleep(std::time::Duration::from_secs(1));
@@ -39,6 +38,19 @@ fn stream_greet(window: Window, name: &str) {
             },
         );
     });
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn async_stream(window: Window, name_str: String) {
+    for i in 0..10 {
+        let _ = window.emit(
+            "greet",
+            Payload {
+                message: format!("Hello, {}! You've been greeted from Rust! {}", name_str, i),
+            },
+        );
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
 }
 
 fn main() {
@@ -60,9 +72,13 @@ fn main() {
     for data in &all_data {
         println!("{:?}", data);
     }
-
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet, new_greet, stream_greet])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            new_greet,
+            stream_greet,
+            async_stream
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -15,12 +15,24 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "minimize": true,
+        "maximize": true,
+        "startDragging": true
       }
     },
     "windows": [
       {
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
         "title": "llama-rust-desktop",
-        "width": 800,
+        "width": 1000,
         "height": 600
       }
     ],

@@ -1,47 +1,47 @@
-import { useState, useEffect } from 'react'
-import { invoke } from '@tauri-apps/api/tauri'
-import { listen } from '@tauri-apps/api/event'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
+import { listen } from '@tauri-apps/api/event';
+import './App.css';
 
 type Message = {
-  event: string
+  event: string;
   payload: {
-    message: string
-  }
-}
+    message: string;
+  };
+};
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState('')
-  const [name, setName] = useState('')
-  const [enable, setEnable] = useState(true)
+  const [greetMsg, setGreetMsg] = useState('');
+  const [name, setName] = useState('');
+  const [enable, setEnable] = useState(true);
 
   async function greet() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    await invoke('stream_greet', { name })
+    await invoke('async_stream', { name_str: name });
   }
   useEffect(() => {
     listen('greet', (e: Message) => {
-      const message = e.payload.message
+      const message = e.payload.message;
       if (message === 'stop') {
-        setEnable(true)
+        setEnable(true);
       } else {
-        setEnable(false)
-        setGreetMsg(message)
+        setEnable(false);
+        setGreetMsg(message);
       }
-    })
-  }, [])
+    });
+  }, []);
 
   return (
     <div className="container">
-      <h1>Welcome to new world!</h1>
+      <h1 data-tauri-drag-region>Welcome to new world!</h1>
 
       <p>Click on the Tauri, Vite, and React logos to learn more.</p>
 
       <form
         className="row"
         onSubmit={(e) => {
-          e.preventDefault()
-          greet()
+          e.preventDefault();
+          greet();
         }}
       >
         <input
@@ -54,7 +54,7 @@ function App() {
 
       <p>{greetMsg}</p>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
