@@ -6,6 +6,15 @@
         "all": false,
         "open": true
       },
+      "os": {
+        "all": true
+      },
+      "dialog": {
+        "all": false,
+        "open": true,
+        "save": true,
+        "message": true
+      },
       "window": {
         "all": false,
         "close": true,
@@ -23,7 +32,9 @@
         "hiddenTitle": true,
         "title": "llama-rust-desktop",
         "width": 1000,
-        "height": 600
+        "height": 600,
+        "minWidth": 500,
+        "minHeight": 300
       }
     ],
     "bundle": {
