@@ -5,7 +5,10 @@
 // import { platform } from '@tauri-apps/api/os';
 
 import { AiOutlinePlus, AiOutlineSetting } from 'react-icons/ai';
-import { HiEllipsisHorizontal } from 'react-icons/hi2';
+import {
+  HiEllipsisHorizontal,
+  HiMiniArrowLeftOnRectangle,
+} from 'react-icons/hi2';
 
 import './styles.css';
 import LangDetect from './components/LangDetect';
@@ -53,10 +56,10 @@ function App() {
     <>
       <div className="flex w-full h-screen">
         <div className="flex flex-col w-64 h-full bg-gray-950/90 text-white justify-stretch">
-          <div className="w-full bg-black/95 text-gray-300">
+          <div className="w-full bg-black/95 text-gray-300 h-8">
             <div
               data-tauri-drag-region
-              className="flex flex-row justify-end content-end py-2 pr-1 space-x-2"
+              className="flex flex-row justify-end items-center py-2 pr-1 space-x-2"
             >
               <button>
                 <AiOutlinePlus />
@@ -76,7 +79,21 @@ function App() {
             </button>
           </div>
         </div>
-        <div className="w-full h-full bg-green-200">
+        <div className="w-full h-full border-l border-gray-500">
+          <div
+            data-tauri-drag-region
+            className="flex flex-row bg-black/95 h-8 text-white justify-between items-center px-3 border-b border-gray-500"
+          >
+            <p className="">title</p>
+            <div className="space-x-2">
+              <button>
+                <HiMiniArrowLeftOnRectangle />
+              </button>
+              <button>
+                <HiEllipsisHorizontal />
+              </button>
+            </div>
+          </div>
           <p>main window</p>
           <p>direction window</p>
         </div>

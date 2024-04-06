@@ -5,11 +5,11 @@ const LangDetect = () => {
   return (
     <Select.Root>
       <Select.Trigger
-        className="flex flex-row w-40 justify-between border border-gray-600 rounded-md py-1 px-2 hover:text-gray-300"
+        className="flex flex-row w-40 justify-between items-center border border-gray-600 rounded-md py-1 px-2 hover:text-gray-300"
         aria-label="lang"
       >
         <Select.Value placeholder="Auto detection" />
-        <Select.Icon className="pt-1">
+        <Select.Icon>
           <HiOutlineChevronUpDown />
         </Select.Icon>
       </Select.Trigger>
