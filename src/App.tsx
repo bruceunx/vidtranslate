@@ -8,10 +8,12 @@ import { AiOutlinePlus, AiOutlineSetting } from 'react-icons/ai';
 import {
   HiEllipsisHorizontal,
   HiMiniArrowLeftOnRectangle,
+  HiMiniPlay,
 } from 'react-icons/hi2';
 
 import './styles.css';
 import LangDetect from './components/LangDetect';
+import NSlider from './components/Slider';
 
 // type Message = {
 //   event: string;
@@ -59,7 +61,7 @@ function App() {
           <div className="w-full bg-black/95 text-gray-300 h-8">
             <div
               data-tauri-drag-region
-              className="flex flex-row justify-end items-center py-2 pr-1 space-x-2"
+              className="flex flex-row justify-end items-center py-2 pr-1 space-x-3 text-gray-400"
             >
               <button>
                 <AiOutlinePlus />
@@ -72,17 +74,17 @@ function App() {
           <div className="flex flex-col px-2 py-1 h-full">
             <p>list</p>
           </div>
-          <div className="flex w-full p-2 border-t border-gray-700 justify-between text-sm px-2">
+          <div className="flex w-full p-3 border-t border-gray-700 justify-between text-sm px-2">
             <LangDetect />
             <button>
               <HiEllipsisHorizontal />
             </button>
           </div>
         </div>
-        <div className="w-full h-full border-l border-gray-500">
+        <div className="flex flex-col justify-stretch w-full h-full border-l border-gray-700">
           <div
             data-tauri-drag-region
-            className="flex flex-row bg-black/95 h-8 text-white justify-between items-center px-3 border-b border-gray-500"
+            className="flex flex-row bg-black/95 h-8 text-white justify-between items-center px-3 border-b border-gray-700"
           >
             <p className="">title</p>
             <div className="space-x-2">
@@ -94,8 +96,21 @@ function App() {
               </button>
             </div>
           </div>
-          <p>main window</p>
-          <p>direction window</p>
+          <div className="flex flex-col justify-stretch bg-gray-950/95 text-white h-full px-3">
+            <div className="h-full">
+              <p>main window</p>
+              <p>direction window</p>
+            </div>
+            <div className="flex flex-col items-center justify-center h-20">
+              <NSlider />
+              <div className="flex justify-between w-full h-fit">
+                <button className="hover:text-gray-400">
+                  <HiMiniPlay className="h-7 w-7" />
+                </button>
+                <p className="text-sm">00.00/12.22</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </>
