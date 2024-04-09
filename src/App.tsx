@@ -17,6 +17,7 @@ import {
 import './styles.css';
 import LangDetect from './components/LangDetect';
 import NSlider from './components/Slider';
+import Transcript from './components/Transcript';
 
 // type Message = {
 //   event: string;
@@ -135,8 +136,8 @@ function App() {
               </div>
             </div>
             {showRightSider && (
-              <div className="flex flex-col w-full bg-sky-500">
-                <p>drawing</p>
+              <div className="flex flex-col w-full bg-gray-900 border-l border-gray-700">
+                <Transcript />
               </div>
             )}
           </div>
