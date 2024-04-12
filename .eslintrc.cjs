@@ -31,4 +31,4 @@ module.exports = {
     quotes: ['error', 'single'],
     'react/react-in-jsx-scope': 'off', // Disables the rule
   },
-}
+};

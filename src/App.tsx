@@ -1,6 +1,6 @@
 import * as React from 'react';
 // import { useEffect } from 'react';
-// import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/tauri';
 // import { listen } from '@tauri-apps/api/event';
 // import { open } from '@tauri-apps/api/dialog';
 // import { platform } from '@tauri-apps/api/os';
@@ -35,8 +35,15 @@ function App() {
   };
 
   const toggleRightSider = () => {
+    greet();
     setShowRightSider((prev) => !prev);
   };
+
+  async function greet() {
+    const value = await invoke('func2');
+    console.log(value);
+  }
+
   // async function greet() {
   //   await invoke('async_stream', { name_str: name });
   //   const selected = await open({

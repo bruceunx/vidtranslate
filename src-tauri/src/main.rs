@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod db;
+mod func;
 use tauri::Window;
 
 #[derive(Clone, serde::Serialize)]
@@ -77,7 +78,9 @@ fn main() {
             greet,
             new_greet,
             stream_greet,
-            async_stream
+            async_stream,
+            func::func1,
+            func::func2,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
