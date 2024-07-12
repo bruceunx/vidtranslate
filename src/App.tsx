@@ -1,5 +1,4 @@
 import * as React from 'react';
-// import { useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 // import { listen } from '@tauri-apps/api/event';
 // import { open } from '@tauri-apps/api/dialog';

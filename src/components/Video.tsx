@@ -9,7 +9,6 @@ const Child: React.ForwardRefRenderFunction<HTMLVideoElement, Props> = (
   return (
     <video className="w-full my-3 mx-auto rounded-xl" ref={ref} {...props}>
       <source
-        className="w-full h-full"
         src="https://www.w3schools.com/html/mov_bbb.mp4"
         type="video/mp4"
       />
