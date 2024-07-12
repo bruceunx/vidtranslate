@@ -19,6 +19,8 @@ import LangDetect from './components/LangDetect';
 import NSlider from './components/Slider';
 import Transcript from './components/Transcript';
 
+import Video from './components/Video';
+
 // type Message = {
 //   event: string;
 //   payload: {
@@ -27,8 +29,13 @@ import Transcript from './components/Transcript';
 // };
 
 function App() {
-  const [isPlay, setIsPlay] = React.useState<boolean>(true);
+  const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
+  const [videoDuration, setVideoDuration] = React.useState<number>(0);
+  const [currentLocation, setCurrentLocation] = React.useState<number>(0);
+  const [progress, setProgress] = React.useState<number>(0);
+
+  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const togglePlay = () => {
     setIsPlay((prev) => !prev);
@@ -43,6 +50,49 @@ function App() {
     const value = await invoke('func2');
     console.log(value);
   }
+
+  React.useEffect(() => {
+    if (isPlay) {
+      videoRef.current?.play();
+    } else {
+      videoRef.current?.pause();
+    }
+  }, [isPlay]);
+
+  React.useEffect(() => {
+    const handleMetadataLoaded = () => {
+      setVideoDuration(videoRef.current?.duration || 0);
+    };
+
+    if (videoRef.current) {
+      videoRef.current.addEventListener('loadedmetadata', handleMetadataLoaded);
+    }
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.removeEventListener(
+          'loadedmetadata',
+          handleMetadataLoaded
+        );
+      }
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const handleTimeUpdate = () => {
+      setProgress(Math.floor(videoRef.current?.currentTime || 0));
+    };
+    if (isPlay) {
+      const videoElement = videoRef.current;
+      if (videoElement) {
+        videoElement.addEventListener('timeupdate', handleTimeUpdate);
+      }
+      return () => {
+        if (videoElement) {
+          videoElement.removeEventListener('timeupdate', handleTimeUpdate);
+        }
+      };
+    }
+  }, [isPlay]);
 
   // async function greet() {
   //   await invoke('async_stream', { name_str: name });
@@ -74,6 +124,36 @@ function App() {
   //     }
   //   });
   // }, []);
+
+  function formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+  }
+
+  function handleVideoProgress(value: number): void {
+    if (videoDuration == 0) {
+      setCurrentLocation(0);
+    } else {
+      setCurrentLocation(value);
+    }
+  }
+
+  React.useEffect(() => {
+    console.log(videoDuration, currentLocation);
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.floor(
+        (videoDuration * currentLocation) / 100
+      );
+      setProgress(Math.floor(videoRef.current?.currentTime || 0));
+    }
+  }, [currentLocation]);
 
   return (
     <>
@@ -125,11 +205,14 @@ function App() {
           <div className="flex flex-row justify-stretch bg-gray-950/95 text-white h-full pl-3">
             <div className="flex flex-col w-full justify-stretch h-full pr-3">
               <div className="h-full">
-                <p>main window</p>
+                <Video ref={videoRef} />
                 <p>direction window</p>
               </div>
               <div className="flex flex-col items-center justify-center h-20">
-                <NSlider />
+                <NSlider
+                  value={Math.floor((progress / videoDuration) * 100)}
+                  onChange={handleVideoProgress}
+                />
                 <div className="flex justify-between w-full h-fit">
                   <button className="hover:text-gray-400" onClick={togglePlay}>
                     {isPlay ? (
@@ -138,7 +221,9 @@ function App() {
                       <HiMiniPlay className="h-7 w-7" />
                     )}
                   </button>
-                  <p className="text-sm">00:00/12:22</p>
+                  <p className="text-sm">
+                    {formatTime(progress)}/{formatTime(videoDuration)}
+                  </p>
                 </div>
               </div>
             </div>

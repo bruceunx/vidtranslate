@@ -31,10 +31,10 @@
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "title": "llama-rust-desktop",
-        "width": 1000,
-        "height": 600,
-        "minWidth": 500,
-        "minHeight": 300
+        "width": 1300,
+        "height": 800,
+        "minWidth": 1000,
+        "minHeight": 600
       }
     ],
     "bundle": {

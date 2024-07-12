@@ -20,8 +20,10 @@
       {
         "decorations": false,
         "title": "llama-rust-desktop",
-        "width": 1000,
-        "height": 600
+        "width": 1200,
+        "height": 800,
+        "minWidth": 1000,
+        "minHeight": 500
       }
     ]
   }
