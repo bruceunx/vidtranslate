@@ -157,8 +157,8 @@ function App() {
   return (
     <>
       <div className="flex w-full h-screen">
-        <div className="flex flex-col w-64 h-full bg-gray-950/90 text-white justify-stretch">
-          <div className="w-full bg-black/95 text-gray-300 h-8">
+        <div className="flex flex-col w-64 h-full bg-custome-gray-light text-white justify-stretch">
+          <div className="w-full text-gray-300 h-8">
             <div
               data-tauri-drag-region
               className="flex flex-row justify-end items-center py-2 pr-1 space-x-3 text-gray-400"
@@ -175,17 +175,17 @@ function App() {
             {/* Scroll Area Radix-UI */}
             <p>list</p>
           </div>
-          <div className="flex w-full p-3 border-t border-gray-700 justify-between text-sm px-2">
+          <div className="flex w-full p-3 justify-between text-sm px-2">
             <LangDetect />
             <button>
               <HiEllipsisHorizontal />
             </button>
           </div>
         </div>
-        <div className="flex flex-col justify-stretch w-full h-full border-l border-gray-700">
+        <div className="flex flex-col justify-stretch w-full h-full">
           <div
             data-tauri-drag-region
-            className="flex flex-row bg-black/95 h-8 text-white justify-between items-center px-3 border-b border-gray-700"
+            className="flex flex-row bg-custome-gray-dark h-8 text-white justify-between items-center px-3"
           >
             <p className="">title</p>
             <div className="space-x-2">
@@ -201,7 +201,7 @@ function App() {
               </button>
             </div>
           </div>
-          <div className="flex flex-row justify-stretch bg-gray-950/95 text-white h-full pl-3">
+          <div className="flex flex-row justify-stretch bg-custome-gray-dark text-white h-full pl-3">
             <div className="flex flex-col w-full justify-stretch h-full pr-3">
               <div className="h-full">
                 <Video ref={videoRef} />
@@ -227,7 +227,7 @@ function App() {
               </div>
             </div>
             {showRightSider && (
-              <div className="flex flex-col w-full bg-gray-900 border-l border-gray-700">
+              <div className="flex flex-col w-full bg-custome-gray-sider">
                 <Transcript />
               </div>
             )}

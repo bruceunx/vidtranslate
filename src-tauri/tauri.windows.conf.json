@@ -3,8 +3,14 @@
     "allowlist": {
       "all": false,
       "shell": {
-        "all": false,
-        "open": true
+        "sidecar": true,
+        "scope": [
+          {
+            "name": "whisper",
+            "sidecar": true,
+            "args": true
+          }
+        ]
       },
       "window": {
         "all": false,
@@ -20,7 +26,7 @@
       {
         "decorations": false,
         "title": "llama-rust-desktop",
-        "width": 1200,
+        "width": 1300,
         "height": 800,
         "minWidth": 1000,
         "minHeight": 500
