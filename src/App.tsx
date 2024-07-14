@@ -18,10 +18,10 @@ import NSlider from './components/Slider';
 import Transcript from './components/Transcript';
 
 import Video from './components/Video';
+import { formatTime } from './utils/file';
 
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
-  // const [droppedFile, setDroppedFile] = React.useState<string>('');
 
   const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
@@ -32,7 +32,14 @@ function App() {
   const [videoPath, setVideoPath] = React.useState('');
 
   const handleFileChange = async () => {
-    const file = await open();
+    const file = await open({
+      filters: [
+        {
+          name: 'Media Files',
+          extensions: ['mp4', 'webm', 'ogg', 'mp3', 'wav'],
+        },
+      ],
+    });
     if (typeof file === 'string') {
       setVideoPath(convertFileSrc(file));
     }
@@ -122,22 +129,6 @@ function App() {
     }
   }, [videoPath]);
 
-  function formatTime(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    const formattedHours = String(hours).padStart(2, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(remainingSeconds).padStart(2, '0');
-
-    if (hours === 0) {
-      return `${formattedMinutes}:${formattedSeconds}`;
-    } else {
-      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-    }
-  }
-
   function handleVideoProgress(value: number): void {
     if (videoDuration == 0) {
       setCurrentLocation(0);
@@ -165,10 +156,10 @@ function App() {
               data-tauri-drag-region
               className="flex flex-row justify-end items-center py-2 pr-1 space-x-3 text-gray-400"
             >
-              <button onClick={handleFileChange}>
+              <button onClick={handleFileChange} className="hover:text-white">
                 <AiOutlinePlus />
               </button>
-              <button>
+              <button className="hover:text-white">
                 <AiOutlineSetting />
               </button>
             </div>
