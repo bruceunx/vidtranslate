@@ -204,9 +204,9 @@ function App() {
             </div>
           </div>
           <div
-            className={`flex flex-row justify-stretch ${isDragging ? 'bg-blue-700/70' : 'bg-custome-gray-dark'} text-white h-full pl-3`}
+            className={`flex flex-row justify-stretch ${isDragging ? 'bg-blue-700/70' : 'bg-custome-gray-dark'} text-white pl-3 h-full`}
           >
-            <div className="flex flex-col w-full justify-stretch h-full pr-3">
+            <div className="flex flex-col w-full justify-between h-full pr-3">
               <div className="h-full">
                 {videoPath && <Video ref={videoRef} videopath={videoPath} />}
                 <p className="text-2xl font-bold py-3">title</p>
