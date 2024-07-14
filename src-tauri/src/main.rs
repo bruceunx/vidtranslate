@@ -2,11 +2,24 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod db;
 mod func;
+use std::path::{Path, PathBuf};
 use tauri::Window;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
     message: String,
+}
+
+#[tauri::command]
+fn get_video_file_path(file_path: &str) -> String {
+    let sanitized_path = Path::new(file_path)
+        .canonicalize() // Get the absolute, normalized path
+        .unwrap_or_else(|_| PathBuf::from("")) // Handle errors safely
+        .to_str()
+        .unwrap_or("")
+        .to_string();
+
+    sanitized_path
 }
 
 #[tauri::command]
@@ -81,6 +94,7 @@ fn main() {
             async_stream,
             func::func1,
             func::func2,
+            get_video_file_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -11,7 +11,17 @@
   },
   "tauri": {
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; img-src 'self' media-src 'self' asset: https://asset.localhost"
+    },
+    "allowlist": {
+      "protocol": {
+        "asset": true,
+        "assetScope": ["**/*"]
+      },
+      "fs": {
+        "all": false,
+        "readFile": true
+      }
     }
   }
 }

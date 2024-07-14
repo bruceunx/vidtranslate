@@ -1,18 +1,19 @@
 import * as React from 'react';
 
-interface Props {}
+interface Props {
+  videopath: string;
+}
 
 const Child: React.ForwardRefRenderFunction<HTMLVideoElement, Props> = (
-  props,
+  { videopath },
   ref
 ) => {
   return (
-    <video className="w-full my-3 mx-auto rounded-xl" ref={ref} {...props}>
-      <source
-        src="https://www.w3schools.com/html/mov_bbb.mp4"
-        type="video/mp4"
-      />
-    </video>
+    <>
+      <video className="w-full max-h-1/2 mx-auto rounded-xl" ref={ref}>
+        <source src={videopath} type="video/mp4" />
+      </video>
+    </>
   );
 };
 

@@ -10,10 +10,11 @@ const NSlider = ({
   return (
     <Slider.Root
       className="relative flex items-center h-5 w-full select-none touch-none hover:cursor-pointer"
+      defaultValue={[0]}
       value={[value]}
       max={100}
       step={1}
-      onValueChange={(value) => onChange(value[0])}
+      onValueChange={(values: number[]) => onChange(values[0])}
     >
       <Slider.Track className="relative grow h-1 bg-gray-700 rounded-full">
         <Slider.Range className="absolute bg-violet-600/70 h-full round-full" />
