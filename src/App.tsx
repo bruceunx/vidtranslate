@@ -34,6 +34,16 @@ function App() {
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
+  const handleNewFile = (file: string) => {
+    if (getFileTypeFromExtension(file) === 'webm') {
+      setVideoPath('');
+      setRawPath(file);
+    } else {
+      setRawPath('');
+      setVideoPath(convertFileSrc(file));
+    }
+  };
+
   const handleFileChange = async () => {
     const file = await open({
       filters: [
@@ -43,15 +53,7 @@ function App() {
         },
       ],
     });
-    if (typeof file === 'string') {
-      if (getFileTypeFromExtension(file) === 'webm') {
-        setVideoPath('');
-        setRawPath(file);
-      } else {
-        setRawPath('');
-        setVideoPath(convertFileSrc(file));
-      }
-    }
+    if (typeof file === 'string') handleNewFile(file);
   };
 
   const togglePlay = () => {
@@ -153,7 +155,7 @@ function App() {
         case 'drop': {
           setIsDragging(false);
           const filePath = event.payload.paths[0];
-          setVideoPath(convertFileSrc(filePath));
+          handleNewFile(filePath);
           break;
         }
         case 'hover':
