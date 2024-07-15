@@ -1,11 +1,9 @@
 import * as React from 'react';
 
-interface Props {
-  videopath: string;
-}
+interface Props {}
 
 const Child: React.ForwardRefRenderFunction<HTMLVideoElement, Props> = (
-  { videopath },
+  props,
   ref
 ) => {
   const [contentHeight, setContentHeight] = React.useState(
@@ -24,9 +22,8 @@ const Child: React.ForwardRefRenderFunction<HTMLVideoElement, Props> = (
         className="m-auto rounded-xl"
         style={{ height: contentHeight }}
         ref={ref}
-      >
-        <source src={videopath} type="video/mp4" />
-      </video>
+        {...props}
+      ></video>
     </>
   );
 };

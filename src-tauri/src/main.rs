@@ -21,7 +21,7 @@ struct VideoState {
 
 impl New for VideoState {
     fn new() -> VideoState {
-        let (tx, rx) = mpsc::channel(10);
+        let (tx, rx) = mpsc::channel(1);
         let video_state = VideoState {
             sender: Arc::new(Mutex::new(tx)),
             recv: Arc::new(Mutex::new(rx)),
@@ -43,7 +43,7 @@ async fn start_video_stream(
         .await
         .map_err(|e| format!("Failed to seek video file: {}", e))?;
 
-    let (tx, rx) = mpsc::channel(10);
+    let (tx, rx) = mpsc::channel(1);
     let tx_clone = tx.clone();
     {
         let mut state = state.lock().await;

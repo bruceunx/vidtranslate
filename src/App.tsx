@@ -18,7 +18,7 @@ import NSlider from './components/Slider';
 import Transcript from './components/Transcript';
 
 import Video from './components/Video';
-import { delay, formatTime, getFileTypeFromExtension } from './utils/file';
+import { formatTime, getFileTypeFromExtension } from './utils/file';
 
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
@@ -32,6 +32,8 @@ function App() {
   const [videoPath, setVideoPath] = React.useState<string>('');
   const [rawPath, setRawPath] = React.useState<string>('');
 
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
   const handleFileChange = async () => {
     const file = await open({
       filters: [
@@ -42,17 +44,27 @@ function App() {
       ],
     });
     if (typeof file === 'string') {
-      setVideoPath(convertFileSrc(file));
-      await delay(3000);
-      setRawPath(file);
+      if (getFileTypeFromExtension(file) === 'webm') {
+        setVideoPath('');
+        setRawPath(file);
+      } else {
+        setRawPath('');
+        setVideoPath(convertFileSrc(file));
+      }
     }
   };
-
-  const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const togglePlay = () => {
     setIsPlay((prev) => !prev);
   };
+
+  React.useEffect(() => {
+    if (isPlay) {
+      videoRef.current?.play();
+    } else {
+      videoRef.current?.pause();
+    }
+  }, [isPlay]);
 
   const toggleRightSider = () => {
     setShowRightSider((prev) => !prev);
@@ -65,14 +77,12 @@ function App() {
 
   React.useEffect(() => {
     const loadVideo = async () => {
+      const videoElement = videoRef.current;
+      if (videoElement === null) return;
       await invoke('start_video_stream', {
         offset: 0,
         file_path: rawPath,
       });
-      const videoElement = videoRef.current;
-
-      if (videoElement === null) return;
-
       const mediaSource = new MediaSource();
       videoElement.src = URL.createObjectURL(mediaSource);
       mediaSource.addEventListener('sourceopen', async () => {
@@ -86,6 +96,7 @@ function App() {
             } else {
               mediaSource.endOfStream();
             }
+            setVideoDuration(Math.floor(videoRef.current?.duration || 0));
           } catch (error) {
             return;
           }
@@ -95,18 +106,8 @@ function App() {
       });
     };
 
-    if (getFileTypeFromExtension(rawPath) === 'webm') {
-      loadVideo();
-    }
+    if (rawPath !== '') loadVideo();
   }, [rawPath]);
-
-  React.useEffect(() => {
-    if (isPlay) {
-      videoRef.current?.play();
-    } else {
-      videoRef.current?.pause();
-    }
-  }, [isPlay]);
 
   React.useEffect(() => {
     const handleMetadataLoaded = () => {
@@ -114,9 +115,10 @@ function App() {
       setProgress(0);
       setIsPlay(false);
     };
-
-    if (videoRef.current) {
+    if (videoRef.current && videoPath !== '') {
       videoRef.current.addEventListener('loadedmetadata', handleMetadataLoaded);
+      videoRef.current.src = videoPath;
+      videoRef.current.load();
     }
     return () => {
       if (videoRef.current) {
@@ -126,13 +128,6 @@ function App() {
         );
       }
     };
-  }, [videoPath]);
-
-  React.useEffect(() => {
-    if (videoPath !== '') {
-      videoRef.current?.load();
-      setProgress(0);
-    }
   }, [videoPath]);
 
   React.useEffect(() => {
@@ -244,7 +239,7 @@ function App() {
           >
             <div className="flex flex-col w-full justify-between h-full pr-3">
               <div className="h-full">
-                {videoPath && <Video ref={videoRef} videopath={videoPath} />}
+                <Video ref={videoRef} videopath={videoPath} />
                 <p className="text-2xl font-bold py-3">title</p>
                 <p>direction window</p>
               </div>
@@ -261,7 +256,7 @@ function App() {
                   <button
                     className="hover:text-gray-400"
                     onClick={togglePlay}
-                    disabled={videoPath === ''}
+                    disabled={videoPath === '' && rawPath === ''}
                   >
                     {isPlay ? (
                       <HiMiniPause className="h-7 w-7" />
