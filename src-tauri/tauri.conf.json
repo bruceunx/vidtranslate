@@ -11,7 +11,7 @@
   },
   "tauri": {
     "security": {
-      "csp": "default-src 'self'; img-src 'self' media-src 'self' asset: https://asset.localhost"
+      "csp": "default-src 'self'; img-src 'self'; media-src 'self'; asset: https://asset.localhost"
     },
     "allowlist": {
       "protocol": {
@@ -20,7 +20,9 @@
       },
       "fs": {
         "all": false,
-        "readFile": true
+        "readFile": true,
+        "writeFile": true,
+        "scope": ["**/*"]
       }
     }
   }

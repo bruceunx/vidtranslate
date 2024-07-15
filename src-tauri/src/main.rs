@@ -3,7 +3,85 @@
 mod db;
 mod func;
 use std::path::{Path, PathBuf};
-use tauri::Window;
+use std::sync::Arc;
+use tauri::api::file::read_binary;
+use tauri::{State, Window};
+use tokio::fs::File;
+use tokio::io::{AsyncReadExt, AsyncSeekExt, SeekFrom};
+use tokio::sync::{mpsc, Mutex};
+
+trait New {
+    fn new() -> Self;
+}
+
+struct VideoState {
+    sender: Arc<Mutex<mpsc::Sender<Vec<u8>>>>,
+    recv: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
+}
+
+impl New for VideoState {
+    fn new() -> VideoState {
+        let (tx, rx) = mpsc::channel(10);
+        let video_state = VideoState {
+            sender: Arc::new(Mutex::new(tx)),
+            recv: Arc::new(Mutex::new(rx)),
+        };
+        return video_state;
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn start_video_stream(
+    state: State<'_, Mutex<VideoState>>,
+    offset: u64,
+    file_path: &str,
+) -> Result<(), String> {
+    let mut file = File::open(file_path)
+        .await
+        .map_err(|e| format!("Failed to open video file: {}", e))?;
+    file.seek(SeekFrom::Start(offset))
+        .await
+        .map_err(|e| format!("Failed to seek video file: {}", e))?;
+
+    let (tx, rx) = mpsc::channel(10);
+    let tx_clone = tx.clone();
+    {
+        let mut state = state.lock().await;
+        state.sender = Arc::new(Mutex::new(tx));
+        state.recv = Arc::new(Mutex::new(rx));
+    }
+
+    tauri::async_runtime::spawn(async move {
+        let mut buffer = vec![0; 1024 * 1024 * 10];
+        loop {
+            match file.read(&mut buffer).await {
+                Ok(0) => break, // End of file
+                Ok(n) => {
+                    if tx_clone.send(buffer[..n].to_vec()).await.is_err() {
+                        break;
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn get_video_chunk(state: State<'_, Mutex<VideoState>>) -> Result<Vec<u8>, String> {
+    let rx_clone = {
+        let state = state.lock().await;
+        state.recv.clone()
+    };
+
+    let var = rx_clone.lock().await.recv().await;
+    match var {
+        Some(chunk) => Ok(chunk),
+        None => Err("No more data".into()),
+    }
+}
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -67,6 +145,15 @@ async fn async_stream(window: Window, name_str: String) {
     }
 }
 
+#[tauri::command]
+async fn read_file(file_path: String) -> Result<Vec<u8>, String> {
+    let path = PathBuf::from(file_path);
+    match read_binary(path) {
+        Ok(file_content) => Ok(file_content),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
 fn main() {
     db::init_db().unwrap();
     // let entry = db::DataEntry {
@@ -87,14 +174,18 @@ fn main() {
         println!("{:?}", data);
     }
     tauri::Builder::default()
+        .manage(Mutex::new(VideoState::new()))
         .invoke_handler(tauri::generate_handler![
             greet,
             new_greet,
             stream_greet,
+            read_file,
             async_stream,
             func::func1,
             func::func2,
             get_video_file_path,
+            start_video_stream,
+            get_video_chunk,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -26,6 +26,7 @@ const Child: React.ForwardRefRenderFunction<HTMLVideoElement, Props> = (
         ref={ref}
       >
         <source src={videopath} type="video/mp4" />
+        <source src={videopath} type="video/ogg" />
       </video>
     </>
   );

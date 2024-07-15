@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { convertFileSrc } from '@tauri-apps/api/tauri';
+import { convertFileSrc, invoke } from '@tauri-apps/api/tauri';
 import { open } from '@tauri-apps/api/dialog';
 import { appWindow } from '@tauri-apps/api/window';
 
@@ -18,7 +18,7 @@ import NSlider from './components/Slider';
 import Transcript from './components/Transcript';
 
 import Video from './components/Video';
-import { formatTime } from './utils/file';
+import { delay, formatTime, getFileTypeFromExtension } from './utils/file';
 
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
@@ -29,7 +29,8 @@ function App() {
   const [currentLocation, setCurrentLocation] = React.useState<number>(0);
   const [progress, setProgress] = React.useState<number>(0);
 
-  const [videoPath, setVideoPath] = React.useState('');
+  const [videoPath, setVideoPath] = React.useState<string>('');
+  const [rawPath, setRawPath] = React.useState<string>('');
 
   const handleFileChange = async () => {
     const file = await open({
@@ -42,6 +43,8 @@ function App() {
     });
     if (typeof file === 'string') {
       setVideoPath(convertFileSrc(file));
+      await delay(3000);
+      setRawPath(file);
     }
   };
 
@@ -54,6 +57,48 @@ function App() {
   const toggleRightSider = () => {
     setShowRightSider((prev) => !prev);
   };
+
+  const fetchVideoChunk = async (): Promise<Uint8Array> => {
+    const chunk: number[] = await invoke('get_video_chunk');
+    return new Uint8Array(chunk);
+  };
+
+  React.useEffect(() => {
+    const loadVideo = async () => {
+      await invoke('start_video_stream', {
+        offset: 0,
+        file_path: rawPath,
+      });
+      const videoElement = videoRef.current;
+
+      if (videoElement === null) return;
+
+      const mediaSource = new MediaSource();
+      videoElement.src = URL.createObjectURL(mediaSource);
+      mediaSource.addEventListener('sourceopen', async () => {
+        const mimeCodec = 'video/webm';
+        const sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+        async function appendNextChunk() {
+          try {
+            const chunk = await fetchVideoChunk();
+            if (chunk.length > 0) {
+              sourceBuffer.appendBuffer(chunk);
+            } else {
+              mediaSource.endOfStream();
+            }
+          } catch (error) {
+            return;
+          }
+        }
+        sourceBuffer.addEventListener('updateend', appendNextChunk);
+        appendNextChunk();
+      });
+    };
+
+    if (getFileTypeFromExtension(rawPath) === 'webm') {
+      loadVideo();
+    }
+  }, [rawPath]);
 
   React.useEffect(() => {
     if (isPlay) {
@@ -81,6 +126,13 @@ function App() {
         );
       }
     };
+  }, [videoPath]);
+
+  React.useEffect(() => {
+    if (videoPath !== '') {
+      videoRef.current?.load();
+      setProgress(0);
+    }
   }, [videoPath]);
 
   React.useEffect(() => {
@@ -121,13 +173,6 @@ function App() {
       unlisten.then((off) => off());
     };
   }, []);
-
-  React.useEffect(() => {
-    if (videoPath !== '') {
-      videoRef.current?.load();
-      setProgress(0);
-    }
-  }, [videoPath]);
 
   function handleVideoProgress(value: number): void {
     if (videoDuration == 0) {
