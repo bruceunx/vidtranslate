@@ -34,7 +34,16 @@ function App() {
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
-  const handleNewFile = (file: string) => {
+  const handleNewFile = async (file: string) => {
+    const info: string = await invoke('run_ffprobe', { file_path: file });
+    setVideoDuration(parseInt(info));
+
+    const _info: string = await invoke('run_ffmpeg', { file_path: file });
+    console.log(_info);
+
+    setProgress(0);
+    setIsPlay(false);
+
     if (getFileTypeFromExtension(file) === 'webm') {
       setVideoPath('');
       setRawPath(file);
@@ -46,10 +55,11 @@ function App() {
 
   const handleFileChange = async () => {
     const file = await open({
+      multiple: false,
       filters: [
         {
           name: 'Media Files',
-          extensions: ['mp4', 'webm', 'ogg', 'mp3', 'wav'],
+          extensions: ['mp4', 'webm', 'ogg', 'mp3', 'wav', 'mov', 'm4b'],
         },
       ],
     });
@@ -98,7 +108,6 @@ function App() {
             } else {
               mediaSource.endOfStream();
             }
-            setVideoDuration(Math.floor(videoRef.current?.duration || 0));
           } catch (error) {
             return;
           }
@@ -112,24 +121,12 @@ function App() {
   }, [rawPath]);
 
   React.useEffect(() => {
-    const handleMetadataLoaded = () => {
-      setVideoDuration(Math.floor(videoRef.current?.duration || 0));
-      setProgress(0);
-      setIsPlay(false);
-    };
     if (videoRef.current && videoPath !== '') {
-      videoRef.current.addEventListener('loadedmetadata', handleMetadataLoaded);
       videoRef.current.src = videoPath;
       videoRef.current.load();
+      setProgress(0);
+      setIsPlay(false);
     }
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.removeEventListener(
-          'loadedmetadata',
-          handleMetadataLoaded
-        );
-      }
-    };
   }, [videoPath]);
 
   React.useEffect(() => {

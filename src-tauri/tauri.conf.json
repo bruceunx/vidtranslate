@@ -10,6 +10,10 @@
     "version": "0.0.0"
   },
   "tauri": {
+    "bundle": {
+      "externalBin": ["binaries/ffmpeg", "binaries/ffprobe"],
+      "resources": ["resources/*"]
+    },
     "security": {
       "csp": "default-src 'self'; img-src 'self'; media-src 'self'; asset: https://asset.localhost"
     },
@@ -17,6 +21,21 @@
       "protocol": {
         "asset": true,
         "assetScope": ["**/*"]
+      },
+      "shell": {
+        "sidecar": true,
+        "scope": [
+          {
+            "name": "binaries/ffmpeg",
+            "sidecar": true,
+            "args": true
+          },
+          {
+            "name": "binaries/ffprobe",
+            "sidecar": true,
+            "args": true
+          }
+        ]
       },
       "fs": {
         "all": false,

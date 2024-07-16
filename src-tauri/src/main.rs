@@ -1,5 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+mod commands;
 mod db;
 mod func;
 use std::path::{Path, PathBuf};
@@ -155,7 +156,7 @@ async fn read_file(file_path: String) -> Result<Vec<u8>, String> {
 }
 
 fn main() {
-    db::init_db().unwrap();
+    // db::init_db().unwrap();
     // let entry = db::DataEntry {
     //     name: "Jack".to_string(),
     //     age: 23,
@@ -169,10 +170,10 @@ fn main() {
     // db::update_data(&new_entry, 1).unwrap();
     // db::delete_data(2).unwrap();
 
-    let all_data = db::get_all_data().unwrap();
-    for data in &all_data {
-        println!("{:?}", data);
-    }
+    // let all_data = db::get_all_data().unwrap();
+    // for data in &all_data {
+    //     println!("{:?}", data);
+    // }
     tauri::Builder::default()
         .manage(Mutex::new(VideoState::new()))
         .invoke_handler(tauri::generate_handler![
@@ -186,6 +187,8 @@ fn main() {
             get_video_file_path,
             start_video_stream,
             get_video_chunk,
+            commands::run_ffprobe,
+            commands::run_ffmpeg,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
