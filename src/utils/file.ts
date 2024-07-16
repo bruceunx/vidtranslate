@@ -1,5 +1,5 @@
 import { writeTextFile, readTextFile } from '@tauri-apps/api/fs';
-import { appDataDir } from '@tauri-apps/api/path';
+import { appDataDir, resourceDir } from '@tauri-apps/api/path';
 
 interface CacheData {}
 
@@ -68,4 +68,9 @@ export async function readCacheData(): Promise<CacheData | null> {
     console.error('Error reading cache data:', error);
     return null;
   }
+}
+
+export async function getResourceDir(): Promise<string> {
+  const dir = await resourceDir();
+  return dir;
 }

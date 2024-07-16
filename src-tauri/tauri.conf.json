@@ -11,7 +11,11 @@
   },
   "tauri": {
     "bundle": {
-      "externalBin": ["binaries/ffmpeg", "binaries/ffprobe"],
+      "externalBin": [
+        "binaries/ffmpeg",
+        "binaries/ffprobe",
+        "binaries/whisper"
+      ],
       "resources": ["resources/*"]
     },
     "security": {
@@ -34,6 +38,11 @@
             "name": "binaries/ffprobe",
             "sidecar": true,
             "args": true
+          },
+          {
+            "name": "binaries/whisper",
+            "sidecar": true,
+            "args": true
           }
         ]
       },
@@ -41,7 +50,12 @@
         "all": false,
         "readFile": true,
         "writeFile": true,
+        "readDir": true,
+        "createDir": true,
         "scope": ["**/*"]
+      },
+      "path": {
+        "all": true
       }
     }
   }

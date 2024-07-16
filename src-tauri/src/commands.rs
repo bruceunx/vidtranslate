@@ -1,6 +1,12 @@
+use crate::VideoState;
+
+use std::path::Path;
+use tauri::State;
+use tokio::sync::{mpsc, Mutex};
+
+use std::sync::Arc;
 use tauri::api::path::cache_dir;
 use tauri::api::process::{Command, CommandEvent};
-// use tauri::Window;
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn run_ffprobe(file_path: String) -> Result<String, String> {
@@ -72,5 +78,77 @@ pub async fn run_ffmpeg(file_path: String) -> Result<String, String> {
             }
         }
         Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn run_whisper(
+    state: State<'_, Mutex<VideoState>>,
+    model_fold: String,
+) -> Result<(), String> {
+    let cache_dir = cache_dir().ok_or("failed")?;
+
+    let wav_file_path = cache_dir
+        .join("llama-rust-desktop")
+        .join("wav-cache")
+        .join("temp.wav");
+
+    if !wav_file_path.exists() {
+        return Err("no wav file found".to_string());
+    }
+
+    let wav_file_str = wav_file_path.to_str().ok_or("failed")?.to_string();
+
+    let _fold = Path::new(&model_fold);
+    let use_model = _fold
+        .join("resources")
+        .join("models")
+        .join("ggml-large-v3-q5_0.bin");
+
+    if !use_model.exists() {
+        return Err("model not found".to_string());
+    }
+
+    let use_model_str = use_model.to_str().ok_or("failed")?.to_string();
+
+    let (mut rx, _) = Command::new_sidecar("whisper")
+        .expect("failed to create `whisper` binary command")
+        .args(["-m", &use_model_str, "-f", &wav_file_str, "-np"])
+        .spawn()
+        .expect("failed to spawn sidecar");
+
+    let (ttx, trx) = mpsc::channel(1);
+    let tx_clone = ttx.clone();
+    {
+        let mut state = state.lock().await;
+        state.tsender = Arc::new(Mutex::new(ttx));
+        state.trecv = Arc::new(Mutex::new(trx));
+    }
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = rx.recv().await {
+            if let CommandEvent::Stdout(line) = event {
+                if tx_clone.send(line).await.is_err() {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_whisper_txt(state: State<'_, Mutex<VideoState>>) -> Result<String, String> {
+    let rx_clone = {
+        let state = state.lock().await;
+        state.trecv.clone()
+    };
+
+    let var = rx_clone.lock().await.recv().await;
+    match var {
+        Some(chunk) => Ok(chunk),
+        None => Err("No more data".into()),
     }
 }

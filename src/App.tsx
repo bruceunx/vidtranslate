@@ -18,7 +18,11 @@ import NSlider from './components/Slider';
 import Transcript from './components/Transcript';
 
 import Video from './components/Video';
-import { formatTime, getFileTypeFromExtension } from './utils/file';
+import {
+  formatTime,
+  getFileTypeFromExtension,
+  getResourceDir,
+} from './utils/file';
 
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
@@ -39,7 +43,15 @@ function App() {
     setVideoDuration(parseInt(info));
 
     const _info: string = await invoke('run_ffmpeg', { file_path: file });
-    console.log(_info);
+    if (_info === 'ok') {
+      const _resource = await getResourceDir();
+      await invoke('run_whisper', { model_fold: _resource });
+      let line = 'start';
+      while (line) {
+        line = await invoke('get_whisper_txt');
+        console.log(line);
+      }
+    }
 
     setProgress(0);
     setIsPlay(false);
