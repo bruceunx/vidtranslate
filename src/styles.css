@@ -46,3 +46,24 @@
 .spin {
   animation: spin 2s linear infinite;
 }
+
+.scroll-item {
+  animation: scroll-up 10s linear;
+  animation-iteration-count: infinite;
+  opacity: 1;
+}
+
+@keyframes scroll-up {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  2% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

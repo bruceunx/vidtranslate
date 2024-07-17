@@ -25,6 +25,7 @@ import {
 } from './utils/file';
 import { transformString } from './utils/transript';
 import { TextLine } from './types';
+import VideoText from './components/VideoText';
 
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
@@ -41,6 +42,8 @@ function App() {
   const [rawPath, setRawPath] = React.useState<string>('');
 
   const [lines, setLines] = React.useState<TextLine[]>([]);
+
+  const [currentSubtitles, setCurrentSubtitles] = React.useState<string>('');
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
@@ -70,6 +73,7 @@ function App() {
 
   const handleNewFile = async (file: string) => {
     setCurrentFileName(getFileName(file));
+    setCurrentSubtitles('');
     setLines([]);
     setProgress(0);
     setIsPlay(false);
@@ -119,6 +123,14 @@ function App() {
     const chunk: number[] = await invoke('get_video_chunk');
     return new Uint8Array(chunk);
   };
+
+  function handleVideoProgress(value: number): void {
+    if (videoDuration == 0) {
+      setCurrentLocation(0);
+    } else {
+      setCurrentLocation(value);
+    }
+  }
 
   React.useEffect(() => {
     const loadVideo = async () => {
@@ -201,14 +213,6 @@ function App() {
     };
   }, []);
 
-  function handleVideoProgress(value: number): void {
-    if (videoDuration == 0) {
-      setCurrentLocation(0);
-    } else {
-      setCurrentLocation(value);
-    }
-  }
-
   React.useEffect(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = Math.floor(
@@ -217,6 +221,21 @@ function App() {
       setProgress(Math.floor(videoRef.current?.currentTime || 0));
     }
   }, [currentLocation]);
+
+  React.useEffect(() => {
+    if (lines.length === 0) return;
+    const targetIndex = lines.findIndex((obj) => obj.time_start === progress);
+    if (targetIndex === -1) return;
+
+    let current = lines[targetIndex].text_str;
+    if (
+      targetIndex < lines.length - 1 &&
+      lines[targetIndex + 1].time_start === progress
+    ) {
+      current += lines[targetIndex + 1].text_str;
+    }
+    setCurrentSubtitles(current);
+  }, [progress]);
 
   return (
     <>
@@ -267,7 +286,7 @@ function App() {
             <div className="flex flex-col w-full justify-between h-full pr-3">
               <div className="h-full">
                 <Video ref={videoRef} videopath={videoPath} />
-                <p>direction window</p>
+                <VideoText subtitles={currentSubtitles} />
               </div>
               <div className="flex flex-col items-center justify-center h-20">
                 <NSlider
