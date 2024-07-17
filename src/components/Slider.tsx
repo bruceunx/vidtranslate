@@ -3,8 +3,10 @@ import * as Slider from '@radix-ui/react-slider';
 const NSlider = ({
   value,
   onChange,
+  disabled,
 }: {
   value: number;
+  disabled: boolean;
   onChange: (v: number) => void;
 }) => {
   return (
@@ -15,6 +17,7 @@ const NSlider = ({
       max={100}
       step={1}
       onValueChange={(values: number[]) => onChange(values[0])}
+      disabled={disabled}
     >
       <Slider.Track className="relative grow h-1 bg-gray-700 rounded-full">
         <Slider.Range className="absolute bg-violet-600/70 h-full round-full" />

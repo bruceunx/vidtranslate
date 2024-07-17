@@ -113,7 +113,15 @@ pub async fn run_whisper(
 
     let (mut rx, _) = Command::new_sidecar("whisper")
         .expect("failed to create `whisper` binary command")
-        .args(["-m", &use_model_str, "-f", &wav_file_str, "-np"])
+        .args([
+            "-m",
+            &use_model_str,
+            "-f",
+            &wav_file_str,
+            "-np",
+            "-l",
+            "auto",
+        ])
         .spawn()
         .expect("failed to spawn sidecar");
 
@@ -134,6 +142,7 @@ pub async fn run_whisper(
                 break;
             }
         }
+        tx_clone.send("end".to_string()).await.expect("error");
     });
 
     Ok(())

@@ -5,7 +5,6 @@ import { appWindow } from '@tauri-apps/api/window';
 
 import { AiOutlinePlus, AiOutlineSetting } from 'react-icons/ai';
 import {
-  HiEllipsisHorizontal,
   HiMiniArrowLeftOnRectangle,
   HiMiniArrowRightOnRectangle,
   HiMiniPlay,
@@ -23,9 +22,12 @@ import {
   getFileTypeFromExtension,
   getResourceDir,
 } from './utils/file';
+import { transformString } from './utils/transript';
+import { TextLine } from './types';
 
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
+  const [isTransform, setIsTransform] = React.useState<boolean>(false);
 
   const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
@@ -36,25 +38,39 @@ function App() {
   const [videoPath, setVideoPath] = React.useState<string>('');
   const [rawPath, setRawPath] = React.useState<string>('');
 
+  const [lines, setLines] = React.useState<TextLine[]>([]);
+
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
-  const handleNewFile = async (file: string) => {
+  const transformVideo = async (file: string) => {
     const info: string = await invoke('run_ffprobe', { file_path: file });
     setVideoDuration(parseInt(info));
 
-    const _info: string = await invoke('run_ffmpeg', { file_path: file });
-    if (_info === 'ok') {
+    const run_ffmpeg_info: string = await invoke('run_ffmpeg', {
+      file_path: file,
+    });
+    if (run_ffmpeg_info === 'ok') {
       const _resource = await getResourceDir();
       await invoke('run_whisper', { model_fold: _resource });
       let line = 'start';
+      let id = 0;
       while (line) {
         line = await invoke('get_whisper_txt');
-        console.log(line);
+        if (line === 'end') break;
+        const line_text = transformString(line);
+        if (id === 0 && line_text?.time_start !== 0) continue;
+        if (line_text !== null) setLines((prev) => [...prev, line_text]);
+        id += 1;
       }
     }
+    setIsTransform(false);
+  };
 
+  const handleNewFile = async (file: string) => {
+    setLines([]);
     setProgress(0);
     setIsPlay(false);
+    setIsTransform(true);
 
     if (getFileTypeFromExtension(file) === 'webm') {
       setVideoPath('');
@@ -63,6 +79,8 @@ function App() {
       setRawPath('');
       setVideoPath(convertFileSrc(file));
     }
+
+    await transformVideo(file);
   };
 
   const handleFileChange = async () => {
@@ -219,11 +237,8 @@ function App() {
             {/* Scroll Area Radix-UI */}
             <p>list</p>
           </div>
-          <div className="flex w-full p-3 justify-between text-sm px-2">
+          <div className="flex w-full justify-center border-t border-t-gray-700 text-sm p-2">
             <LangDetect />
-            <button>
-              <HiEllipsisHorizontal />
-            </button>
           </div>
         </div>
         {/* content area */}
@@ -239,9 +254,6 @@ function App() {
                 ) : (
                   <HiMiniArrowLeftOnRectangle />
                 )}
-              </button>
-              <button>
-                <HiEllipsisHorizontal />
               </button>
             </div>
           </div>
@@ -262,12 +274,15 @@ function App() {
                       : Math.floor((progress / videoDuration) * 100)
                   }
                   onChange={handleVideoProgress}
+                  disabled={(videoPath === '' && rawPath === '') || isTransform}
                 />
                 <div className="flex justify-between w-full h-fit">
                   <button
                     className="hover:text-gray-400"
                     onClick={togglePlay}
-                    disabled={videoPath === '' && rawPath === ''}
+                    disabled={
+                      (videoPath === '' && rawPath === '') || isTransform
+                    }
                   >
                     {isPlay ? (
                       <HiMiniPause className="h-7 w-7" />
@@ -283,7 +298,17 @@ function App() {
             </div>
             {showRightSider && (
               <div className="flex flex-col w-full bg-custome-gray-dark">
-                <Transcript />
+                <Transcript
+                  progress={progress}
+                  lines={lines}
+                  isTransform={isTransform}
+                  duration={videoDuration}
+                  percent={
+                    videoDuration === 0
+                      ? 0
+                      : Math.floor((progress / videoDuration) * 100)
+                  }
+                />
               </div>
             )}
           </div>
