@@ -23,7 +23,10 @@ const Transcript = ({
   const [transformProgress, setTransformProgress] = React.useState(0);
 
   React.useEffect(() => {
-    if (duration === 0 || lines.length === 0) setTransformProgress(0);
+    if (duration === 0 || lines.length === 0) {
+      setTransformProgress(0);
+      return;
+    }
     const line = lines[lines.length - 1];
     setTransformProgress((line['time_start'] / duration) * 100);
   }, [lines]);

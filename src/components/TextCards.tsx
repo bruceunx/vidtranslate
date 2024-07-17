@@ -66,7 +66,7 @@ const TextCards = ({
     <>
       <div
         ref={ref}
-        className="flex flex-col space-y-2  overflow-y-scroll hide-scrollbar"
+        className="flex flex-col space-y-1  overflow-y-scroll hide-scrollbar"
         style={{ height: contentHeight }}
       >
         {lines.map((line, index) => (

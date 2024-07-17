@@ -19,6 +19,7 @@ import Transcript from './components/Transcript';
 import Video from './components/Video';
 import {
   formatTime,
+  getFileName,
   getFileTypeFromExtension,
   getResourceDir,
 } from './utils/file';
@@ -28,6 +29,7 @@ import { TextLine } from './types';
 function App() {
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isTransform, setIsTransform] = React.useState<boolean>(false);
+  const [currentFileName, setCurrentFileName] = React.useState<string>('');
 
   const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
@@ -67,6 +69,7 @@ function App() {
   };
 
   const handleNewFile = async (file: string) => {
+    setCurrentFileName(getFileName(file));
     setLines([]);
     setProgress(0);
     setIsPlay(false);
@@ -245,8 +248,9 @@ function App() {
         <div className="flex flex-col justify-stretch w-full h-full">
           <div
             data-tauri-drag-region
-            className="flex flex-row bg-custome-gray-dark h-10 text-white justify-end items-center px-3"
+            className="flex flex-row bg-custome-gray-dark h-10 text-white justify-between items-center px-3"
           >
+            <p className="font-bold text-gray-300">{currentFileName}</p>
             <div className="space-x-2">
               <button onClick={toggleRightSider}>
                 {showRightSider ? (
@@ -263,7 +267,6 @@ function App() {
             <div className="flex flex-col w-full justify-between h-full pr-3">
               <div className="h-full">
                 <Video ref={videoRef} videopath={videoPath} />
-                <p className="text-2xl font-bold py-3">title</p>
                 <p>direction window</p>
               </div>
               <div className="flex flex-col items-center justify-center h-20">

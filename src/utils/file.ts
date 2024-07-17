@@ -74,3 +74,8 @@ export async function getResourceDir(): Promise<string> {
   const dir = await resourceDir();
   return dir;
 }
+
+export function getFileName(filePath: string): string {
+  const lastSlashIndex = filePath.lastIndexOf('/');
+  return filePath.substring(lastSlashIndex + 1);
+}
