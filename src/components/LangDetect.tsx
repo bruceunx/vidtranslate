@@ -1,9 +1,13 @@
 import { HiOutlineChevronUpDown } from 'react-icons/hi2';
 import * as Select from '@radix-ui/react-select';
 
-const LangDetect = () => {
+const LangDetect = ({ setLang }: { setLang: (lang: string) => void }) => {
+  const onChange = (value: string) => {
+    setLang(value);
+  };
+
   return (
-    <Select.Root>
+    <Select.Root onValueChange={onChange}>
       <Select.Trigger
         className="flex flex-row w-40 justify-between items-center rounded-md p-2 hover:text-gray-300 focus:outline-none hover:outline-none"
         aria-label="lang"
@@ -23,13 +27,13 @@ const LangDetect = () => {
               <Select.ItemText>Auto</Select.ItemText>
             </Select.Item>
             <Select.Item
-              value="english"
+              value="en"
               className="px-2 hover:bg-blue-focus hover:outline-none focus:outline-none"
             >
               <Select.ItemText>English</Select.ItemText>
             </Select.Item>
             <Select.Item
-              value="chinese"
+              value="zh"
               className="px-2 hover:bg-blue-focus hover:outline-none focus:outline-none"
             >
               <Select.ItemText>简体中文</Select.ItemText>

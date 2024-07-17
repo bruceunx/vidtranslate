@@ -85,6 +85,7 @@ pub async fn run_ffmpeg(file_path: String) -> Result<String, String> {
 pub async fn run_whisper(
     state: State<'_, Mutex<VideoState>>,
     model_fold: String,
+    lang: String,
 ) -> Result<(), String> {
     let cache_dir = cache_dir().ok_or("failed")?;
 
@@ -120,7 +121,7 @@ pub async fn run_whisper(
             &wav_file_str,
             "-np",
             "-l",
-            "auto",
+            &lang,
         ])
         .spawn()
         .expect("failed to spawn sidecar");

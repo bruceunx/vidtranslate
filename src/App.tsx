@@ -28,6 +28,8 @@ import { TextLine } from './types';
 import VideoText from './components/VideoText';
 
 function App() {
+  const [lang, setLang] = React.useState<string>('auto');
+
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isTransform, setIsTransform] = React.useState<boolean>(false);
   const [currentFileName, setCurrentFileName] = React.useState<string>('');
@@ -55,8 +57,8 @@ function App() {
       file_path: file,
     });
     if (run_ffmpeg_info === 'ok') {
-      const _resource = await getResourceDir();
-      await invoke('run_whisper', { model_fold: _resource });
+      const resource = await getResourceDir();
+      await invoke('run_whisper', { model_fold: resource, lang: lang });
       let line = 'start';
       let id = 0;
       while (line) {
@@ -64,6 +66,7 @@ function App() {
         if (line === 'end') break;
         const line_text = transformString(line);
         if (id === 0 && line_text?.time_start !== 0) continue;
+        if (id === 0) setCurrentSubtitles(line_text?.text_str || '');
         if (line_text !== null) setLines((prev) => [...prev, line_text]);
         id += 1;
       }
@@ -260,7 +263,7 @@ function App() {
             <p>list</p>
           </div>
           <div className="flex w-full justify-center border-t border-t-gray-700 text-sm p-2">
-            <LangDetect />
+            <LangDetect setLang={setLang} />
           </div>
         </div>
         {/* content area */}
