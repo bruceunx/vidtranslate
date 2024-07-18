@@ -9,6 +9,6 @@
 
 ## TODO
 
-    - [ ] transript screen auto scroll
+    - [x] transript screen auto scroll
     - [ ] file list
     - [ ] mp3 format
