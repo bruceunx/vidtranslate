@@ -328,11 +328,6 @@ function App() {
                   lines={lines}
                   isTransform={isTransform}
                   duration={videoDuration}
-                  percent={
-                    videoDuration === 0
-                      ? 0
-                      : Math.floor((progress / videoDuration) * 100)
-                  }
                 />
               </div>
             )}

@@ -33,11 +33,9 @@ const TextCard: React.FC<TextCardProps> = ({
 const TextCards = ({
   lines,
   progress,
-  percent,
 }: {
   lines: TextLine[];
   progress: number;
-  percent: number;
 }) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = React.useState(
@@ -53,14 +51,17 @@ const TextCards = ({
   }, []);
 
   React.useEffect(() => {
-    if (ref.current) {
+    if (ref.current && lines.length > 0) {
       const container = ref.current;
-      const height = (container.clientHeight * 70) / 100;
+      const targetIndex = lines.findIndex((obj) => obj.time_start === progress);
+      if (targetIndex === -1) return;
+      const percentIndex = targetIndex / lines.length;
+      const height = (container.clientHeight * 90) / 100;
       const targetScrollTop =
-        Math.floor((container.scrollHeight * percent) / 100 / height) * height;
+        Math.floor((container.scrollHeight * percentIndex) / height) * height;
       container.scrollTop = targetScrollTop;
     }
-  }, [percent]);
+  }, [progress]);
 
   return (
     <>

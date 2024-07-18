@@ -101,10 +101,7 @@ pub async fn run_whisper(
     let wav_file_str = wav_file_path.to_str().ok_or("failed")?.to_string();
 
     let _fold = Path::new(&model_fold);
-    let use_model = _fold
-        .join("resources")
-        .join("models")
-        .join("ggml-large-v3-q5_0.bin");
+    let use_model = _fold.join("resources").join("models").join("large.bin");
 
     if !use_model.exists() {
         return Err("model not found".to_string());

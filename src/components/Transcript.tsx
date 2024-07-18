@@ -10,13 +10,11 @@ import Spinner from './Spinner';
 const Transcript = ({
   lines,
   progress,
-  percent,
   duration,
   isTransform,
 }: {
   lines: TextLine[];
   progress: number;
-  percent: number;
   duration: number;
   isTransform: boolean;
 }) => {
@@ -63,7 +61,7 @@ const Transcript = ({
           )}
         </div>
         <div>
-          <TextCards lines={lines} progress={progress} percent={percent} />
+          <TextCards lines={lines} progress={progress} />
         </div>
       </Tabs.Content>
       <Tabs.Content
