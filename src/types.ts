@@ -3,3 +3,14 @@ export type TextLine = {
   time_end: number;
   text_str: string;
 };
+
+export interface Transcript {
+  startTime: number;
+  endTime: number;
+  text: string;
+}
+
+export interface Item {
+  filaName: string;
+  transcripts: Transcript[];
+}
