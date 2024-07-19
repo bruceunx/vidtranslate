@@ -9,6 +9,7 @@ export default {
           light: '#2b2b2b',
           dark: '#1f1f1f',
           sider: '#2b2b2b',
+          focus: '#383838',
         },
       },
     },

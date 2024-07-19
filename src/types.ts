@@ -12,5 +12,6 @@ export interface Transcript {
 
 export interface Item {
   filaName: string;
+  timeLength: number;
   transcripts: Transcript[];
 }

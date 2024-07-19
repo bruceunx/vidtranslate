@@ -26,6 +26,7 @@ import {
 import { transformString } from './utils/transript';
 import { TextLine } from './types';
 import VideoText from './components/VideoText';
+import VidoItems from './components/VideoItems';
 
 function App() {
   const [lang, setLang] = React.useState<string>('auto');
@@ -259,8 +260,7 @@ function App() {
             </div>
           </div>
           <div className="flex flex-col px-2 py-1 h-full">
-            {/* Scroll Area Radix-UI */}
-            <p>list</p>
+            <VidoItems />
           </div>
           <div className="flex w-full justify-center border-t border-t-gray-700 text-sm p-2">
             <LangDetect setLang={setLang} />
