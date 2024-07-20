@@ -10,5 +10,6 @@
 ## TODO
 
     - [x] transript screen auto scroll
-    - [ ] file list
-    - [ ] mp3 format
+    - [x] file list
+    - [x] mp3 format
+    - [ ] save transripts to tmp files with time tag
