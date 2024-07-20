@@ -31,7 +31,11 @@ const VideoItem = ({ item }: VideoItemProps) => {
         ) : (
           <AiOutlineCheckCircle className="text-green-500" />
         )}
-        <p className="text-gray-200">{item.fileName}</p>
+        <p className="text-gray-200">
+          {item.fileName.length > 15
+            ? item.fileName.substring(0, 15) + '...'
+            : item.fileName}
+        </p>
       </div>
       <div className="flex flex-row justify-between text-sm text-gray-400">
         <p>.{item.fileFormat}</p>

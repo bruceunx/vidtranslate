@@ -43,7 +43,7 @@ function App() {
   const [rawPath, setRawPath] = React.useState<string>('');
 
   const [lines, setLines] = React.useState<TextLine[]>([]);
-  const [currentSubtitles, setCurrentSubtitles] = React.useState<string>('');
+  const [currentLine, setCurrentLine] = React.useState<string>('');
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
@@ -100,7 +100,7 @@ function App() {
         if (line === 'end') break;
         const line_text = transformString(line);
         if (id === 0 && line_text?.time_start !== 0) continue;
-        if (id === 0) setCurrentSubtitles(line_text?.text_str || '');
+        if (id === 0) setCurrentLine(line_text?.text_str || '');
         if (line_text !== null) {
           setLines((prev) => [...prev, line_text]);
           newLines.push(line_text);
@@ -130,7 +130,7 @@ function App() {
     }
     const fileName = getFileName(file);
     setCurrentFile(file);
-    setCurrentSubtitles('');
+    setCurrentLine('');
     setLines([]);
     setProgress(0);
     setIsPlay(false);
@@ -285,7 +285,7 @@ function App() {
     ) {
       current += lines[targetIndex + 1].text_str;
     }
-    setCurrentSubtitles(current);
+    setCurrentLine(current);
   }, [progress]);
 
   React.useEffect(() => {
@@ -294,6 +294,11 @@ function App() {
       setLines(item.transcripts);
       loadMediaMetadata(item.filePath);
       handleMediaLoad(item.filePath);
+      setProgress(0);
+      setIsPlay(false);
+      if (item.transcripts) {
+        setCurrentLine(item.transcripts[0].text_str);
+      }
     }
   }, [currentFile]);
 
@@ -349,7 +354,7 @@ function App() {
             <div className="flex flex-col w-full justify-between h-full pr-3">
               <div className="h-full">
                 <Video ref={videoRef} videopath={videoPath} />
-                <VideoText subtitles={currentSubtitles} />
+                <VideoText subtitles={currentLine} />
               </div>
               <div className="flex flex-col items-center justify-center h-20">
                 <NSlider
