@@ -13,3 +13,6 @@
     - [x] file list
     - [x] mp3 format
     - [ ] save transripts to tmp files with time tag
+    - [ ] setting modal
+    - [ ] save file to srt or vvt
+    - [ ] translate with gpt2 or llama
