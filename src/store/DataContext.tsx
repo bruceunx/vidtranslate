@@ -83,6 +83,8 @@ const DataContext = React.createContext<DataContextType>({
 });
 
 const DataProvider = ({ children }: { children: React.ReactNode }) => {
+  const [fileSignal, setFileSignal] = React.useState<boolean>(false);
+
   const [state, dispatch] = React.useReducer(reducer, initialState);
   const fileName = 'tempData.json';
 
@@ -119,6 +121,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
       await removeFile(filePath);
     }
     dispatch({ type: 'DELETE_ITEM', payload: fileName });
+    setFileSignal(true);
   };
 
   const updateProgress = (state: boolean | null) => {
@@ -130,6 +133,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     if (textlines === null) return;
     const filePath = await saveTranscriptsToJSON(textlines);
     dispatch({ type: 'UPDATE_ITEM', payload: filePath });
+    setFileSignal(true);
   };
 
   const loadItems = async () => {
@@ -157,8 +161,11 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   React.useEffect(() => {
-    updateFile();
-  }, [state.items]);
+    if (fileSignal) {
+      updateFile();
+      setFileSignal(false);
+    }
+  }, [fileSignal]);
 
   return (
     <DataContext.Provider
