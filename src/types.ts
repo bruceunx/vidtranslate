@@ -9,5 +9,5 @@ export interface Item {
   fileName: string;
   fileFormat: string;
   timeLength: number;
-  transcripts: TextLine[];
+  transcripts: string;
 }

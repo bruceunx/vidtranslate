@@ -53,6 +53,7 @@
         "writeFile": true,
         "readDir": true,
         "createDir": true,
+        "removeFile": true,
         "scope": ["**/*"]
       },
       "path": {

@@ -28,9 +28,10 @@ import {
   getFileTypeFromExtension,
   getResourceDir,
   isAudioFile,
+  readTranscript,
 } from './utils/file';
 import { transformString } from './utils/transript';
-import { TextLine } from './types';
+import { Item, TextLine } from './types';
 import VideoText from './components/VideoText';
 import VidoItems from './components/VideoItems';
 import { useData } from './store/DataContext';
@@ -78,7 +79,7 @@ function App() {
       fileName: fileTitle,
       fileFormat: fileFormat,
       timeLength: duration,
-      transcripts: [],
+      transcripts: '',
     };
     insertItem(item);
   };
@@ -304,15 +305,32 @@ function App() {
   }, [progress]);
 
   React.useEffect(() => {
-    const item = items.find((obj) => obj.filePath === currentFile);
-    if (item) {
-      setLines(item.transcripts);
-      loadMediaMetadata(item.filePath);
-      handleMediaLoad(item.filePath);
+    const handleCurrentFile = async (item: Item) => {
+      const _lines = await readTranscript(item.transcripts);
+      setLines(_lines);
+      if (_lines.length > 0) {
+        setCurrentLine(_lines[0].text_str);
+      }
+    };
+    if (currentFile === '') {
+      setVideoPath('');
+      setRawPath('');
       setProgress(0);
-      setIsPlay(false);
-      if (item.transcripts.length > 0) {
-        setCurrentLine(item.transcripts[0].text_str);
+      setLines([]);
+      setCurrentLine('');
+      setVideoDuration(0);
+      if (videoRef.current) {
+        videoRef.current.src = '';
+        videoRef.current?.load();
+      }
+    } else {
+      const item = items.find((obj) => obj.filePath === currentFile);
+      if (item) {
+        handleCurrentFile(item);
+        loadMediaMetadata(item.filePath);
+        handleMediaLoad(item.filePath);
+        setProgress(0);
+        setIsPlay(false);
       }
     }
   }, [currentFile]);

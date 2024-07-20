@@ -1,5 +1,6 @@
-import { writeTextFile, readTextFile } from '@tauri-apps/api/fs';
-import { appDataDir, resourceDir } from '@tauri-apps/api/path';
+import { writeTextFile, readTextFile, exists } from '@tauri-apps/api/fs';
+import { appDataDir, resourceDir, appCacheDir } from '@tauri-apps/api/path';
+import { TextLine } from '../types';
 
 interface CacheData {}
 
@@ -91,6 +92,20 @@ export function getFileTitle(filePath: string): string {
 
 export function isAudioFile(filePath: string): boolean {
   const fileType = getFileTypeFromExtension(filePath);
-  console.log(fileType);
   return ['mp3', 'm4b', 'wav', 'ogg', 'm4a'].includes(fileType);
+}
+
+export async function readTranscript(fileName: string): Promise<TextLine[]> {
+  try {
+    const dir = await appCacheDir();
+    const filePath = `${dir}${fileName}`;
+    const fileExists = await exists(filePath);
+    if (!fileExists) return [];
+    const fileData = await readTextFile(filePath);
+    const parsedData = JSON.parse(fileData);
+    return parsedData as TextLine[];
+  } catch (error) {
+    console.log('err', error);
+    return [];
+  }
 }

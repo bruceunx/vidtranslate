@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { writeFile, readTextFile, exists, createDir } from '@tauri-apps/api/fs';
+import {
+  writeFile,
+  readTextFile,
+  exists,
+  createDir,
+  removeFile,
+} from '@tauri-apps/api/fs';
 import { appCacheDir } from '@tauri-apps/api/path';
 
 import { Item, TextLine } from '../types';
@@ -86,13 +92,32 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     await writeFile({ path: filePath, contents: JSON.stringify(state.items) });
   };
 
+  const saveTranscriptsToJSON = async (
+    textlines: TextLine[]
+  ): Promise<string> => {
+    const now = new Date();
+    const fileName = now.getTime().toString();
+    const dir = await appCacheDir();
+    const filePath = `${dir}${fileName}`;
+    await writeFile({ path: filePath, contents: JSON.stringify(textlines) });
+
+    return fileName;
+  };
+
   const insertItem = (item: Item | null) => {
     if (item === null) return;
     dispatch({ type: 'ADD_ITEM', payload: item });
   };
 
-  const deleteItem = (fileName: string | null) => {
+  const deleteItem = async (fileName: string | null) => {
     if (fileName === null) return;
+
+    const idx = state.items.findIndex((item) => item.filePath === fileName);
+    if (idx !== -1) {
+      const dir = await appCacheDir();
+      const filePath = `${dir}${state.items[idx].transcripts}`;
+      await removeFile(filePath);
+    }
     dispatch({ type: 'DELETE_ITEM', payload: fileName });
   };
 
@@ -101,9 +126,10 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     dispatch({ type: 'SET_IN_PROGRESS', payload: state });
   };
 
-  const updateItem = (textlines: TextLine[] | null) => {
+  const updateItem = async (textlines: TextLine[] | null) => {
     if (textlines === null) return;
-    dispatch({ type: 'UPDATE_ITEM', payload: textlines });
+    const filePath = await saveTranscriptsToJSON(textlines);
+    dispatch({ type: 'UPDATE_ITEM', payload: filePath });
   };
 
   const loadItems = async () => {
@@ -131,9 +157,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   React.useEffect(() => {
-    if (state.items.length > 0) {
-      updateFile();
-    }
+    updateFile();
   }, [state.items]);
 
   return (

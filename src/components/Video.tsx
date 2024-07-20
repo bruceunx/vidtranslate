@@ -35,6 +35,7 @@ const Child: React.ForwardRefRenderFunction<HTMLVideoElement, Props> = (
         className="m-auto rounded-xl"
         style={{ height: contentHeight }}
         ref={ref}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <source src={videopath} type="video/mp4" />
         <source src={videopath} type="video/ogg" />
