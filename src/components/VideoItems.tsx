@@ -13,10 +13,12 @@ interface VideoListProps {
 }
 
 const VideoItem = ({ item }: VideoItemProps) => {
-  const { setCurrentFile, currentFile } = useData();
+  const { setCurrentFile, currentFile, isInProgress } = useData();
 
   const onClick = () => {
-    setCurrentFile(item.filePath);
+    if (!isInProgress) {
+      setCurrentFile(item.filePath);
+    }
   };
   return (
     <div

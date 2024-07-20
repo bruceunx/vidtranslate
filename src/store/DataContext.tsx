@@ -11,6 +11,7 @@ interface Action {
     | 'SET_ITEMS'
     | 'ADD_ITEM'
     | 'DELETE_ITEM'
+    | 'SET_IN_PROGRESS'
     | 'UPDATE_ITEM';
   payload?: any;
 }
@@ -18,11 +19,13 @@ interface Action {
 
 interface State {
   currentFile: string | null;
+  isInProgress: boolean;
   items: Item[];
 }
 
 const initialState: State = {
   currentFile: null,
+  isInProgress: false,
   items: [],
 };
 
@@ -30,6 +33,8 @@ const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'SET_CURRENT_FILE':
       return { ...state, currentFile: action.payload };
+    case 'SET_IN_PROGRESS':
+      return { ...state, isInProgress: action.payload };
     case 'SET_ITEMS':
       return { ...state, items: action.payload };
     case 'ADD_ITEM':
@@ -51,20 +56,24 @@ const reducer = (state: State, action: Action): State => {
 
 interface DataContextType {
   items: Item[];
+  isInProgress: boolean;
   currentFile: string | null;
   setCurrentFile: (file: string | null) => void;
   insertItem: (item: Item | null) => void;
   deleteItem: (filaName: string | null) => void;
   updateItem: (textlines: TextLine[] | null) => void;
+  updateProgress: (state: boolean | null) => void;
 }
 
 const DataContext = React.createContext<DataContextType>({
   items: [],
+  isInProgress: false,
   currentFile: null,
   setCurrentFile: () => {},
   insertItem: () => {},
   updateItem: () => {},
   deleteItem: () => {},
+  updateProgress: () => {},
 });
 
 const DataProvider = ({ children }: { children: React.ReactNode }) => {
@@ -77,17 +86,22 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     await writeFile({ path: filePath, contents: JSON.stringify(state.items) });
   };
 
-  const insertItem = async (item: Item | null) => {
+  const insertItem = (item: Item | null) => {
     if (item === null) return;
     dispatch({ type: 'ADD_ITEM', payload: item });
   };
 
-  const deleteItem = async (fileName: string | null) => {
+  const deleteItem = (fileName: string | null) => {
     if (fileName === null) return;
     dispatch({ type: 'DELETE_ITEM', payload: fileName });
   };
 
-  const updateItem = async (textlines: TextLine[] | null) => {
+  const updateProgress = (state: boolean | null) => {
+    if (state === null) return;
+    dispatch({ type: 'SET_IN_PROGRESS', payload: state });
+  };
+
+  const updateItem = (textlines: TextLine[] | null) => {
     if (textlines === null) return;
     dispatch({ type: 'UPDATE_ITEM', payload: textlines });
   };
@@ -126,9 +140,11 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     <DataContext.Provider
       value={{
         items: state.items,
+        isInProgress: state.isInProgress,
         insertItem,
         deleteItem,
         updateItem,
+        updateProgress,
         currentFile: state.currentFile,
         setCurrentFile: (file: string | null) =>
           dispatch({ type: 'SET_CURRENT_FILE', payload: file }),

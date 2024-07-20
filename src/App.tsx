@@ -31,12 +31,10 @@ import { useData } from './store/DataContext';
 
 function App() {
   const [lang, setLang] = React.useState<string>('auto');
-
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
-  const [isTransform, setIsTransform] = React.useState<boolean>(false);
-
   const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
+
   const [videoDuration, setVideoDuration] = React.useState<number>(0);
   const [currentLocation, setCurrentLocation] = React.useState<number>(0);
   const [progress, setProgress] = React.useState<number>(0);
@@ -49,8 +47,15 @@ function App() {
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
-  const { items, insertItem, updateItem, setCurrentFile, currentFile } =
-    useData();
+  const {
+    items,
+    isInProgress,
+    updateProgress,
+    insertItem,
+    updateItem,
+    setCurrentFile,
+    currentFile,
+  } = useData();
 
   const handleInsertItem = async (
     file: string,
@@ -104,7 +109,7 @@ function App() {
       }
     }
     updateItem(newLines);
-    setIsTransform(false);
+    updateProgress(false);
   };
 
   const handleMediaLoad = async (file: string) => {
@@ -129,7 +134,7 @@ function App() {
     setLines([]);
     setProgress(0);
     setIsPlay(false);
-    setIsTransform(true);
+    updateProgress(true);
 
     handleMediaLoad(file);
 
@@ -354,14 +359,16 @@ function App() {
                       : Math.floor((progress / videoDuration) * 100)
                   }
                   onChange={handleVideoProgress}
-                  disabled={(videoPath === '' && rawPath === '') || isTransform}
+                  disabled={
+                    (videoPath === '' && rawPath === '') || isInProgress
+                  }
                 />
                 <div className="flex justify-between w-full h-fit">
                   <button
                     className="hover:text-gray-400"
                     onClick={togglePlay}
                     disabled={
-                      (videoPath === '' && rawPath === '') || isTransform
+                      (videoPath === '' && rawPath === '') || isInProgress
                     }
                   >
                     {isPlay ? (
@@ -381,7 +388,7 @@ function App() {
                 <Transcript
                   progress={progress}
                   lines={lines}
-                  isTransform={isTransform}
+                  isTransform={isInProgress}
                   duration={videoDuration}
                 />
               </div>
