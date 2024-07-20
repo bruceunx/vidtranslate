@@ -41,6 +41,7 @@ fn main() {
             commands::run_ffprobe,
             commands::run_ffmpeg,
             commands::run_whisper,
+            commands::stop_whisper,
             commands::get_whisper_txt,
         ])
         .run(tauri::generate_context!())

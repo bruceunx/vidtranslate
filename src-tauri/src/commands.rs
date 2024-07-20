@@ -116,10 +116,12 @@ pub async fn run_whisper(
         String::from("-np"),
     ];
 
-    if lang != String::from("auto") {
-        args.push(String::from("-l"));
-        args.push(lang.clone());
-    }
+    args.push(String::from("-l"));
+    args.push(lang.clone());
+    // if lang != String::from("auto") {
+    //     args.push(String::from("-l"));
+    //     args.push(lang.clone());
+    // }
 
     let (mut rx, _) = Command::new_sidecar("whisper")
         .expect("failed to create `whisper` binary command")
@@ -147,6 +149,17 @@ pub async fn run_whisper(
         tx_clone.send("end".to_string()).await.expect("error");
     });
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn stop_whisper(state: State<'_, Mutex<VideoState>>) -> Result<(), String> {
+    let (ttx, trx) = mpsc::channel(1);
+    {
+        let mut state = state.lock().await;
+        state.tsender = Arc::new(Mutex::new(ttx));
+        state.trecv = Arc::new(Mutex::new(trx));
+    }
     Ok(())
 }
 
