@@ -3,7 +3,11 @@ import { convertFileSrc, invoke } from '@tauri-apps/api/tauri';
 import { open } from '@tauri-apps/api/dialog';
 import { appWindow } from '@tauri-apps/api/window';
 
-import { AiOutlinePlus, AiOutlineSetting } from 'react-icons/ai';
+import {
+  AiOutlinePlus,
+  AiOutlineMinus,
+  AiOutlineSetting,
+} from 'react-icons/ai';
 import {
   HiMiniArrowLeftOnRectangle,
   HiMiniArrowRightOnRectangle,
@@ -20,14 +24,17 @@ import Video from './components/Video';
 import {
   formatTime,
   getFileName,
+  getFileTitle,
   getFileTypeFromExtension,
   getResourceDir,
+  isAudioFile,
 } from './utils/file';
 import { transformString } from './utils/transript';
 import { TextLine } from './types';
 import VideoText from './components/VideoText';
 import VidoItems from './components/VideoItems';
 import { useData } from './store/DataContext';
+import AudioLines from './components/AudioLines';
 
 function App() {
   const [lang, setLang] = React.useState<string>('auto');
@@ -55,6 +62,7 @@ function App() {
     updateItem,
     setCurrentFile,
     currentFile,
+    deleteItem,
   } = useData();
 
   const handleInsertItem = async (
@@ -62,11 +70,13 @@ function App() {
     fileName: string,
     duration: number
   ) => {
-    const [fileTitle, filetype] = fileName.split('.');
+    const index = fileName.lastIndexOf('.');
+    const fileTitle = fileName.slice(0, index);
+    const fileFormat = fileName.slice(index + 1);
     const item = {
       filePath: file,
       fileName: fileTitle,
-      fileFormat: filetype,
+      fileFormat: fileFormat,
       timeLength: duration,
       transcripts: [],
     };
@@ -139,6 +149,11 @@ function App() {
     handleMediaLoad(file);
 
     await transformVideo(file, fileName);
+  };
+
+  const handleDeleteItem = () => {
+    deleteItem(currentFile);
+    setCurrentFile('');
   };
 
   const handleFileChange = async () => {
@@ -296,7 +311,7 @@ function App() {
       handleMediaLoad(item.filePath);
       setProgress(0);
       setIsPlay(false);
-      if (item.transcripts) {
+      if (item.transcripts.length > 0) {
         setCurrentLine(item.transcripts[0].text_str);
       }
     }
@@ -315,6 +330,11 @@ function App() {
               <button onClick={handleFileChange} className="hover:text-white">
                 <AiOutlinePlus />
               </button>
+              {currentFile && !isInProgress && (
+                <button onClick={handleDeleteItem} className="hover:text-white">
+                  <AiOutlineMinus />
+                </button>
+              )}
               <button className="hover:text-white">
                 <AiOutlineSetting />
               </button>
@@ -335,7 +355,7 @@ function App() {
           >
             {currentFile && (
               <p className="font-bold text-gray-300">
-                {getFileName(currentFile).split('.')[0]}
+                {getFileTitle(currentFile)}
               </p>
             )}
             <div className="space-x-2">
@@ -354,7 +374,11 @@ function App() {
             <div className="flex flex-col w-full justify-between h-full pr-3">
               <div className="h-full">
                 <Video ref={videoRef} videopath={videoPath} />
-                <VideoText subtitles={currentLine} />
+                {currentFile && isAudioFile(currentFile) ? (
+                  <AudioLines progress={progress} lines={lines} />
+                ) : (
+                  <VideoText subtitles={currentLine} />
+                )}
               </div>
               <div className="flex flex-col items-center justify-center h-20">
                 <NSlider

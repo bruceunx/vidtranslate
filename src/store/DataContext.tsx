@@ -42,7 +42,7 @@ const reducer = (state: State, action: Action): State => {
     case 'DELETE_ITEM':
       return {
         ...state,
-        items: state.items.filter((item) => item.fileName !== action.payload),
+        items: state.items.filter((item) => item.filePath !== action.payload),
       };
     case 'UPDATE_ITEM': {
       const updatedItems = [...state.items];

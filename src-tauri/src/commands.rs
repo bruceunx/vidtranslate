@@ -108,18 +108,22 @@ pub async fn run_whisper(
     }
 
     let use_model_str = use_model.to_str().ok_or("failed")?.to_string();
+    let mut args: Vec<String> = vec![
+        String::from("-m"),
+        use_model_str.clone(),
+        String::from("-f"),
+        wav_file_str.clone(),
+        String::from("-np"),
+    ];
+
+    if lang != String::from("auto") {
+        args.push(String::from("-l"));
+        args.push(lang.clone());
+    }
 
     let (mut rx, _) = Command::new_sidecar("whisper")
         .expect("failed to create `whisper` binary command")
-        .args([
-            "-m",
-            &use_model_str,
-            "-f",
-            &wav_file_str,
-            "-np",
-            "-l",
-            &lang,
-        ])
+        .args(args)
         .spawn()
         .expect("failed to spawn sidecar");
 

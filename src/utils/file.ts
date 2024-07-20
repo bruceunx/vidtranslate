@@ -10,13 +10,16 @@ export const getAppDataDir = async (): Promise<string> => {
 };
 
 export function getFileTypeFromExtension(filePath: string): string {
-  const extension = filePath.split('.').pop()?.toLowerCase();
+  const index = filePath.lastIndexOf('.');
+  const extension = filePath.slice(index + 1);
   switch (extension) {
     case 'mp4':
     case 'webm':
     case 'ogg':
     case 'wav':
     case 'mp3':
+    case 'm4b':
+    case 'm4a':
       return extension;
     default:
       return 'unknown';
@@ -78,4 +81,16 @@ export async function getResourceDir(): Promise<string> {
 export function getFileName(filePath: string): string {
   const lastSlashIndex = filePath.lastIndexOf('/');
   return filePath.substring(lastSlashIndex + 1);
+}
+
+export function getFileTitle(filePath: string): string {
+  const fileName = getFileName(filePath);
+  const index = fileName.lastIndexOf('.');
+  return fileName.slice(0, index);
+}
+
+export function isAudioFile(filePath: string): boolean {
+  const fileType = getFileTypeFromExtension(filePath);
+  console.log(fileType);
+  return ['mp3', 'm4b', 'wav', 'ogg', 'm4a'].includes(fileType);
 }
