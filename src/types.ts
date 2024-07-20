@@ -4,14 +4,10 @@ export type TextLine = {
   text_str: string;
 };
 
-export interface Transcript {
-  startTime: number;
-  endTime: number;
-  text: string;
-}
-
 export interface Item {
-  filaName: string;
+  filePath: string;
+  fileName: string;
+  fileFormat: string;
   timeLength: number;
-  transcripts: Transcript[];
+  transcripts: TextLine[];
 }

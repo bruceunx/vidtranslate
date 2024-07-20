@@ -1,26 +1,45 @@
 import * as React from 'react';
-import { AiOutlineCheckCircle } from 'react-icons/ai';
+import { AiOutlineCheckCircle, AiOutlineRedo } from 'react-icons/ai';
+import { Item } from '../types';
+import { formatTime } from '../utils/file';
+import { useData } from '../store/DataContext';
 
 interface VideoItemProps {
-  active: boolean;
+  item: Item;
 }
 
-const VideoItem = ({ active }: VideoItemProps) => {
+interface VideoListProps {
+  items: Item[];
+}
+
+const VideoItem = ({ item }: VideoItemProps) => {
+  const { setCurrentFile, currentFile } = useData();
+
+  const onClick = () => {
+    setCurrentFile(item.filePath);
+  };
   return (
-    <div className={`rounded-md ${active && 'bg-custome-gray-focus'} p-2`}>
+    <div
+      className={`rounded-md ${currentFile === item.filePath ? 'bg-custome-gray-focus' : '' && 'bg-custome-gray-focus'} p-1 hover:cursor-pointer`}
+      onClick={onClick}
+    >
       <div className="flex flex-row items-center space-x-3">
-        <AiOutlineCheckCircle className="text-green-500" />
-        <p className="text-gray-200">file name</p>
+        {item.transcripts.length === 0 ? (
+          <AiOutlineRedo className="text-gray-500" />
+        ) : (
+          <AiOutlineCheckCircle className="text-green-500" />
+        )}
+        <p className="text-gray-200">{item.fileName}</p>
       </div>
       <div className="flex flex-row justify-between text-sm text-gray-400">
-        <p>wav</p>
-        <p>00:07</p>
+        <p>.{item.fileFormat}</p>
+        <p>{formatTime(item.timeLength)}</p>
       </div>
     </div>
   );
 };
 
-const VidoItems = () => {
+const VidoItems = ({ items }: VideoListProps) => {
   const [contentHeight, setContentHeight] = React.useState(
     window.innerHeight - 100
   );
@@ -37,20 +56,9 @@ const VidoItems = () => {
       className="flex flex-col gap-2 h-full overflow-y-scroll hide-scrollbar"
       style={{ height: contentHeight }}
     >
-      <VideoItem active={true} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
-      <VideoItem active={false} />
+      {items.map((item, index) => (
+        <VideoItem key={index} item={item} />
+      ))}
     </div>
   );
 };

@@ -27,13 +27,13 @@ import { transformString } from './utils/transript';
 import { TextLine } from './types';
 import VideoText from './components/VideoText';
 import VidoItems from './components/VideoItems';
+import { useData } from './store/DataContext';
 
 function App() {
   const [lang, setLang] = React.useState<string>('auto');
 
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isTransform, setIsTransform] = React.useState<boolean>(false);
-  const [currentFileName, setCurrentFileName] = React.useState<string>('');
 
   const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
@@ -45,18 +45,46 @@ function App() {
   const [rawPath, setRawPath] = React.useState<string>('');
 
   const [lines, setLines] = React.useState<TextLine[]>([]);
-
   const [currentSubtitles, setCurrentSubtitles] = React.useState<string>('');
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
-  const transformVideo = async (file: string) => {
+  const { items, insertItem, updateItem, setCurrentFile, currentFile } =
+    useData();
+
+  const handleInsertItem = async (
+    file: string,
+    fileName: string,
+    duration: number
+  ) => {
+    const [fileTitle, filetype] = fileName.split('.');
+    const item = {
+      filePath: file,
+      fileName: fileTitle,
+      fileFormat: filetype,
+      timeLength: duration,
+      transcripts: [],
+    };
+    insertItem(item);
+  };
+
+  const loadMediaMetadata = async (file: string): Promise<number> => {
     const info: string = await invoke('run_ffprobe', { file_path: file });
-    setVideoDuration(parseInt(info));
+    const timeInfo = parseInt(info);
+    setVideoDuration(timeInfo);
+    return timeInfo;
+  };
+
+  const transformVideo = async (file: string, fileName: string) => {
+    const timeInfo = await loadMediaMetadata(file);
+    handleInsertItem(file, fileName, timeInfo);
 
     const run_ffmpeg_info: string = await invoke('run_ffmpeg', {
       file_path: file,
     });
+
+    const newLines = [];
+
     if (run_ffmpeg_info === 'ok') {
       const resource = await getResourceDir();
       await invoke('run_whisper', { model_fold: resource, lang: lang });
@@ -68,21 +96,18 @@ function App() {
         const line_text = transformString(line);
         if (id === 0 && line_text?.time_start !== 0) continue;
         if (id === 0) setCurrentSubtitles(line_text?.text_str || '');
-        if (line_text !== null) setLines((prev) => [...prev, line_text]);
+        if (line_text !== null) {
+          setLines((prev) => [...prev, line_text]);
+          newLines.push(line_text);
+        }
         id += 1;
       }
     }
+    updateItem(newLines);
     setIsTransform(false);
   };
 
-  const handleNewFile = async (file: string) => {
-    setCurrentFileName(getFileName(file));
-    setCurrentSubtitles('');
-    setLines([]);
-    setProgress(0);
-    setIsPlay(false);
-    setIsTransform(true);
-
+  const handleMediaLoad = async (file: string) => {
     if (getFileTypeFromExtension(file) === 'webm') {
       setVideoPath('');
       setRawPath(file);
@@ -90,8 +115,25 @@ function App() {
       setRawPath('');
       setVideoPath(convertFileSrc(file));
     }
+  };
 
-    await transformVideo(file);
+  const handleNewFile = async (file: string) => {
+    const alreadyExist = items.some((item) => item.filePath === file);
+    if (alreadyExist) {
+      setCurrentFile(file);
+      return;
+    }
+    const fileName = getFileName(file);
+    setCurrentFile(file);
+    setCurrentSubtitles('');
+    setLines([]);
+    setProgress(0);
+    setIsPlay(false);
+    setIsTransform(true);
+
+    handleMediaLoad(file);
+
+    await transformVideo(file, fileName);
   };
 
   const handleFileChange = async () => {
@@ -241,6 +283,15 @@ function App() {
     setCurrentSubtitles(current);
   }, [progress]);
 
+  React.useEffect(() => {
+    const item = items.find((obj) => obj.filePath === currentFile);
+    if (item) {
+      setLines(item.transcripts);
+      loadMediaMetadata(item.filePath);
+      handleMediaLoad(item.filePath);
+    }
+  }, [currentFile]);
+
   return (
     <>
       <div className="flex w-full h-screen">
@@ -260,7 +311,7 @@ function App() {
             </div>
           </div>
           <div className="flex flex-col px-2 py-1 h-full">
-            <VidoItems />
+            <VidoItems items={items} />
           </div>
           <div className="flex w-full justify-center border-t border-t-gray-700 text-sm p-2">
             <LangDetect setLang={setLang} />
@@ -272,7 +323,11 @@ function App() {
             data-tauri-drag-region
             className="flex flex-row bg-custome-gray-dark h-10 text-white justify-between items-center px-3"
           >
-            <p className="font-bold text-gray-300">{currentFileName}</p>
+            {currentFile && (
+              <p className="font-bold text-gray-300">
+                {getFileName(currentFile).split('.')[0]}
+              </p>
+            )}
             <div className="space-x-2">
               <button onClick={toggleRightSider}>
                 {showRightSider ? (

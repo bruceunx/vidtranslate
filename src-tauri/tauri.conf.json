@@ -48,6 +48,7 @@
       },
       "fs": {
         "all": false,
+        "exists": true,
         "readFile": true,
         "writeFile": true,
         "readDir": true,
