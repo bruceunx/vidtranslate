@@ -262,7 +262,7 @@ function App() {
 
   React.useEffect(() => {
     const handleTimeUpdate = () => {
-      setProgress(1000 * (videoRef.current?.currentTime || 0));
+      setProgress(Math.floor(1000 * (videoRef.current?.currentTime || 0)));
     };
     if (isPlay) {
       const videoElement = videoRef.current;
@@ -304,13 +304,15 @@ function App() {
       videoRef.current.currentTime = Math.floor(
         (videoDuration * currentLocation) / 100000
       );
-      setProgress(1000 * (videoRef.current?.currentTime || 0));
+      setProgress(Math.floor(1000 * (videoRef.current?.currentTime || 0)));
     }
   }, [currentLocation]);
 
   React.useEffect(() => {
     if (lines.length === 0) return;
-    const targetIndex = lines.findIndex((obj) => obj.time_start === progress);
+    const targetIndex = lines.findIndex(
+      (obj) => obj.time_start <= progress && obj.time_end >= progress
+    );
     if (targetIndex === -1) return;
 
     let current = lines[targetIndex].text_str;

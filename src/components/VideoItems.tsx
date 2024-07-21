@@ -22,7 +22,7 @@ const VideoItem = ({ item }: VideoItemProps) => {
   };
   return (
     <div
-      className={`rounded-md ${currentFile === item.filePath ? 'bg-custome-gray-focus' : '' && 'bg-custome-gray-focus'} p-1 hover:cursor-pointer`}
+      className={`rounded-md ${currentFile === item.filePath ? 'bg-custome-gray-focus' : '' && 'bg-custome-gray-focus'} p-1 ${!isInProgress && 'hover:cursor-pointer'} `}
       onClick={onClick}
     >
       <div className="flex flex-row items-center space-x-3">

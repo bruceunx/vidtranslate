@@ -53,7 +53,9 @@ const TextCards = ({
   React.useEffect(() => {
     if (ref.current && lines.length > 0) {
       const container = ref.current;
-      const targetIndex = lines.findIndex((obj) => obj.time_start === progress);
+      const targetIndex = lines.findIndex(
+        (obj) => obj.time_start <= progress && obj.time_end >= progress
+      );
       if (targetIndex === -1) return;
       const percentIndex = targetIndex / lines.length;
       const height = (container.clientHeight * 90) / 100;
@@ -73,7 +75,7 @@ const TextCards = ({
         {lines.map((line, index) => (
           <TextCard
             key={index}
-            activate={line.time_start <= progress && line.time_end > progress}
+            activate={line.time_start <= progress && line.time_end >= progress}
             time_start={line.time_start}
             time_end={line.time_end}
             text_str={line.text_str}
