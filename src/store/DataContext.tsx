@@ -24,13 +24,13 @@ interface Action {
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 interface State {
-  currentFile: string | null;
+  currentFile: string;
   isInProgress: boolean;
   items: Item[];
 }
 
 const initialState: State = {
-  currentFile: null,
+  currentFile: '',
   isInProgress: false,
   items: [],
 };
@@ -63,7 +63,7 @@ const reducer = (state: State, action: Action): State => {
 interface DataContextType {
   items: Item[];
   isInProgress: boolean;
-  currentFile: string | null;
+  currentFile: string;
   setCurrentFile: (file: string | null) => void;
   insertItem: (item: Item | null) => void;
   deleteItem: (filaName: string | null) => void;
@@ -74,7 +74,7 @@ interface DataContextType {
 const DataContext = React.createContext<DataContextType>({
   items: [],
   isInProgress: false,
-  currentFile: null,
+  currentFile: '',
   setCurrentFile: () => {},
   insertItem: () => {},
   updateItem: () => {},
@@ -109,6 +109,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const insertItem = (item: Item | null) => {
     if (item === null) return;
     dispatch({ type: 'ADD_ITEM', payload: item });
+    setFileSignal(true);
   };
 
   const deleteItem = async (fileName: string | null) => {

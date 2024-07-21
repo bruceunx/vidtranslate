@@ -8,8 +8,8 @@ export function transformString(input: string): {
   if (match) {
     const [time1, time2] = match[1].split(' --> ');
     return {
-      time_start: getSecondsFromTimeString(time1),
-      time_end: getSecondsFromTimeString(time2),
+      time_start: getMillisFromTimeString(time1),
+      time_end: getMillisFromTimeString(time2),
       text_str: match[2],
     };
   } else {
@@ -17,8 +17,13 @@ export function transformString(input: string): {
   }
 }
 
-export function getSecondsFromTimeString(timeString: string): number {
-  const timeStart = timeString.split(' ')[0];
-  const [hours, minutes, seconds] = timeStart.split(':').map(Number);
-  return hours * 3600 + minutes * 60 + seconds;
+export function getMillisFromTimeString(timeString: string): number {
+  const [hours, minutes, seconds] = timeString.split(':');
+  const [secs, millis] = seconds.split('.');
+  return (
+    parseInt(hours, 10) * 3600000 +
+    parseInt(minutes, 10) * 60000 +
+    parseInt(secs, 10) * 1000 +
+    parseInt(millis, 10)
+  );
 }

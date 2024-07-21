@@ -31,14 +31,15 @@ export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-
+export function formatTime(millis: number): string {
+  const hours = Math.floor(millis / 3600000);
+  millis %= 3600000;
+  const minutes = Math.floor(millis / 60000);
+  millis %= 60000;
+  const seconds = Math.floor(millis / 1000);
   const formattedHours = String(hours).padStart(2, '0');
   const formattedMinutes = String(minutes).padStart(2, '0');
-  const formattedSeconds = String(remainingSeconds).padStart(2, '0');
+  const formattedSeconds = String(seconds).padStart(2, '0');
 
   if (hours === 0) {
     return `${formattedMinutes}:${formattedSeconds}`;
@@ -85,6 +86,7 @@ export function getFileName(filePath: string): string {
 }
 
 export function getFileTitle(filePath: string): string {
+  if (filePath === '') return '';
   const fileName = getFileName(filePath);
   const index = fileName.lastIndexOf('.');
   return fileName.slice(0, index);
@@ -107,5 +109,59 @@ export async function readTranscript(fileName: string): Promise<TextLine[]> {
   } catch (error) {
     console.log('err', error);
     return [];
+  }
+}
+
+function millisToTimestamp(millis: number): string {
+  const hours = Math.floor(millis / 3600000);
+  millis %= 3600000;
+  const minutes = Math.floor(millis / 60000);
+  millis %= 60000;
+  const seconds = Math.floor(millis / 1000);
+  millis %= 1000;
+
+  const formattedHours = String(hours).padStart(2, '0');
+  const formattedMinutes = String(minutes).padStart(2, '0');
+  const formattedSeconds = String(seconds).padStart(2, '0');
+  const formattedMillis = String(millis).padStart(3, '0');
+
+  return `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMillis}`;
+}
+
+function formatSubtitlesAsSRT(subtitles: TextLine[]): string {
+  return subtitles
+    .map((subtitle, index) => {
+      return `${index + 1}\n${millisToTimestamp(subtitle.time_start)} --> ${millisToTimestamp(subtitle.time_end)}\n${subtitle.text_str}\n`;
+    })
+    .join('\n');
+}
+
+function formatSubtitlesAsVTT(subtitles: TextLine[]): string {
+  const vttContent = 'WEBVTT\n\n';
+  return (
+    vttContent +
+    subtitles
+      .map((subtitle) => {
+        return `${millisToTimestamp(subtitle.time_start)} --> ${millisToTimestamp(subtitle.time_end)}\n${subtitle.text_str}\n`;
+      })
+      .join('\n')
+  );
+}
+
+export async function saveToFile(
+  filePath: string,
+  subtitles: TextLine[]
+): Promise<void> {
+  const index = filePath.lastIndexOf('.');
+  let content = '';
+  if (filePath.slice(index + 1) === 'srt') {
+    content = formatSubtitlesAsSRT(subtitles);
+  } else if (filePath.slice(index + 1) === 'vtt') {
+    content = formatSubtitlesAsVTT(subtitles);
+  }
+  try {
+    await writeTextFile(filePath, content);
+  } catch (e) {
+    console.error(e);
   }
 }

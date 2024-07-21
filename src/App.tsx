@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { convertFileSrc, invoke } from '@tauri-apps/api/tauri';
-import { open } from '@tauri-apps/api/dialog';
+import { open, save } from '@tauri-apps/api/dialog';
 import { appWindow } from '@tauri-apps/api/window';
 
 import {
   AiOutlinePlus,
   AiOutlineMinus,
   AiOutlineSetting,
+  AiOutlineDownload,
 } from 'react-icons/ai';
 import {
   HiMiniArrowLeftOnRectangle,
@@ -29,6 +30,7 @@ import {
   getResourceDir,
   isAudioFile,
   readTranscript,
+  saveToFile,
 } from './utils/file';
 import { transformString } from './utils/transript';
 import { Item, TextLine } from './types';
@@ -66,6 +68,20 @@ function App() {
     deleteItem,
   } = useData();
 
+  const onSaveTranscripts = async () => {
+    const filePath = await save({
+      filters: [
+        {
+          name: 'sample',
+          extensions: ['srt', 'vtt'],
+        },
+      ],
+    });
+    if (filePath) {
+      await saveToFile(filePath, lines);
+    }
+  };
+
   const handleInsertItem = async (
     file: string,
     fileName: string,
@@ -86,15 +102,12 @@ function App() {
 
   const loadMediaMetadata = async (file: string): Promise<number> => {
     const info: string = await invoke('run_ffprobe', { file_path: file });
-    const timeInfo = parseInt(info);
+    const timeInfo = parseInt(info) * 1000;
     setVideoDuration(timeInfo);
     return timeInfo;
   };
 
-  const transformVideo = async (file: string, fileName: string) => {
-    const timeInfo = await loadMediaMetadata(file);
-    handleInsertItem(file, fileName, timeInfo);
-
+  const handleWhisper = async (file: string) => {
     const run_ffmpeg_info: string = await invoke('run_ffmpeg', {
       file_path: file,
     });
@@ -120,6 +133,12 @@ function App() {
       }
     }
     updateItem(newLines);
+  };
+
+  const transformVideo = async (file: string, fileName: string) => {
+    const timeInfo = await loadMediaMetadata(file);
+    handleInsertItem(file, fileName, timeInfo);
+    await handleWhisper(file);
     updateProgress(false);
   };
 
@@ -243,7 +262,7 @@ function App() {
 
   React.useEffect(() => {
     const handleTimeUpdate = () => {
-      setProgress(Math.floor(videoRef.current?.currentTime || 0));
+      setProgress(1000 * (videoRef.current?.currentTime || 0));
     };
     if (isPlay) {
       const videoElement = videoRef.current;
@@ -283,9 +302,9 @@ function App() {
   React.useEffect(() => {
     if (videoRef.current) {
       videoRef.current.currentTime = Math.floor(
-        (videoDuration * currentLocation) / 100
+        (videoDuration * currentLocation) / 100000
       );
-      setProgress(Math.floor(videoRef.current?.currentTime || 0));
+      setProgress(1000 * (videoRef.current?.currentTime || 0));
     }
   }, [currentLocation]);
 
@@ -307,9 +326,13 @@ function App() {
   React.useEffect(() => {
     const handleCurrentFile = async (item: Item) => {
       const _lines = await readTranscript(item.transcripts);
-      setLines(_lines);
       if (_lines.length > 0) {
+        setLines(_lines);
         setCurrentLine(_lines[0].text_str);
+      } else {
+        updateProgress(true);
+        await handleWhisper(item.filePath);
+        updateProgress(false);
       }
     };
     if (currentFile === '') {
@@ -371,12 +394,15 @@ function App() {
             data-tauri-drag-region
             className="flex flex-row bg-custome-gray-dark h-10 text-white justify-between items-center px-3"
           >
-            {currentFile && (
-              <p className="font-bold text-gray-300">
-                {getFileTitle(currentFile)}
-              </p>
-            )}
+            <p className="font-bold text-gray-300">
+              {getFileTitle(currentFile)}
+            </p>
             <div className="space-x-2">
+              {lines.length > 0 && (
+                <button onClick={onSaveTranscripts}>
+                  <AiOutlineDownload />
+                </button>
+              )}
               <button onClick={toggleRightSider}>
                 {showRightSider ? (
                   <HiMiniArrowRightOnRectangle />
