@@ -96,6 +96,7 @@ function App() {
       fileFormat: fileFormat,
       timeLength: duration,
       transcripts: '',
+      translate: '',
     };
     insertItem(item);
   };

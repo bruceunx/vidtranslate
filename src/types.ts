@@ -10,4 +10,5 @@ export interface Item {
   fileFormat: string;
   timeLength: number;
   transcripts: string;
+  translate: string;
 }

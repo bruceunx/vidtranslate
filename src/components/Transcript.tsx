@@ -6,18 +6,25 @@ import { TextLine } from '../types';
 import Spinner from './Spinner';
 import Translate from './Translate';
 
+interface TranscriptProps {
+  lines: TextLine[];
+  progress: number;
+  duration: number;
+  isTransform: boolean;
+}
+
 const Transcript = ({
   lines,
   progress,
   duration,
   isTransform,
-}: {
-  lines: TextLine[];
-  progress: number;
-  duration: number;
-  isTransform: boolean;
-}) => {
+}: TranscriptProps) => {
   const [transformProgress, setTransformProgress] = React.useState(0);
+  const [translatedLines, setTranslatedLines] = React.useState<TextLine[]>([]);
+
+  const handleTabChange = (value: string) => {
+    console.log(value);
+  };
 
   React.useEffect(() => {
     if (duration === 0 || lines.length === 0) {
@@ -32,6 +39,7 @@ const Transcript = ({
     <Tabs.Root
       className="flex flex-col w-full h-full"
       defaultValue="transcript"
+      onValueChange={handleTabChange}
     >
       <Tabs.List className="flex shrink-0 text-gray-400 space-x-5 p-3">
         <Tabs.Trigger
@@ -67,7 +75,11 @@ const Transcript = ({
         value="translate"
         className="h-full p-3 bg-custome-gray-sider rounded-tl-xl"
       >
-        <Translate lines={lines} />
+        <Translate
+          lines={lines}
+          translatedLines={translatedLines}
+          setTranslatedLines={setTranslatedLines}
+        />
       </Tabs.Content>
     </Tabs.Root>
   );

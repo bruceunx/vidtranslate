@@ -120,6 +120,8 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
       const dir = await appCacheDir();
       const filePath = `${dir}${state.items[idx].transcripts}`;
       await removeFile(filePath);
+      const translatePath = `${dir}${state.items[idx].translate}`;
+      await removeFile(translatePath);
     }
     dispatch({ type: 'DELETE_ITEM', payload: fileName });
     setFileSignal(true);
