@@ -14,6 +14,7 @@
       "externalBin": [
         "binaries/ffmpeg",
         "binaries/ffprobe",
+        "binaries/llama",
         "binaries/whisper"
       ],
       "resources": ["resources/*"]
@@ -41,6 +42,11 @@
           },
           {
             "name": "binaries/whisper",
+            "sidecar": true,
+            "args": true
+          },
+          {
+            "name": "binaries/llama",
             "sidecar": true,
             "args": true
           }

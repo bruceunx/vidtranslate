@@ -1,11 +1,10 @@
 import * as React from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { HiMiniLanguage } from 'react-icons/hi2';
-import LangChose from './LangChose';
 import ProgressBar from './ProgressBar';
 import TextCards from './TextCards';
 import { TextLine } from '../types';
 import Spinner from './Spinner';
+import Translate from './Translate';
 
 const Transcript = ({
   lines,
@@ -68,12 +67,7 @@ const Transcript = ({
         value="translate"
         className="h-full p-3 bg-custome-gray-sider rounded-tl-xl"
       >
-        <div className="flex space-x-3">
-          <LangChose />
-          <button className="border border-gray-700 p-2 rounded-md hover:bg-gray-700 active:text-gray-400">
-            <HiMiniLanguage className="h-5 w-5" />
-          </button>
-        </div>
+        <Translate lines={lines} />
       </Tabs.Content>
     </Tabs.Root>
   );

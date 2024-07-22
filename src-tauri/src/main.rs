@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 mod commands;
 mod db;
+mod translate;
 mod video;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
@@ -43,6 +44,7 @@ fn main() {
             commands::run_whisper,
             commands::stop_whisper,
             commands::get_whisper_txt,
+            translate::run_llama,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
