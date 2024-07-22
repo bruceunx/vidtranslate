@@ -12,7 +12,8 @@
     - [x] transript screen auto scroll
     - [x] file list
     - [x] mp3 format
-    - [ ] save transripts to tmp files with time tag
+    - [x] save transripts to tmp files with time tag
+    - [x] save file to srt or vvt
+    - [x] translate with gpt2 or llama
     - [ ] setting modal
-    - [ ] save file to srt or vvt
-    - [ ] translate with gpt2 or llama
+    - [ ] adjust llama.cpp to handle file as input
