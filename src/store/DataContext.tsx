@@ -18,6 +18,7 @@ interface Action {
     | 'ADD_ITEM'
     | 'DELETE_ITEM'
     | 'SET_IN_PROGRESS'
+    | 'UPDATE_TRANS_ITEM'
     | 'UPDATE_ITEM';
   payload?: any;
 }
@@ -55,6 +56,11 @@ const reducer = (state: State, action: Action): State => {
       updatedItems[updatedItems.length - 1].transcripts = action.payload;
       return { ...state, items: updatedItems };
     }
+    case 'UPDATE_TRANS_ITEM': {
+      const updatedItems = [...state.items];
+      updatedItems[updatedItems.length - 1].translate = action.payload;
+      return { ...state, items: updatedItems };
+    }
     default:
       return state;
   }
@@ -68,6 +74,7 @@ interface DataContextType {
   insertItem: (item: Item | null) => void;
   deleteItem: (filaName: string | null) => void;
   updateItem: (textlines: TextLine[] | null) => void;
+  updateTranslateFile: (textlines: TextLine[] | null) => void;
   updateProgress: (state: boolean | null) => void;
 }
 
@@ -78,6 +85,7 @@ const DataContext = React.createContext<DataContextType>({
   setCurrentFile: () => {},
   insertItem: () => {},
   updateItem: () => {},
+  updateTranslateFile: () => {},
   deleteItem: () => {},
   updateProgress: () => {},
 });
@@ -119,9 +127,11 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     if (idx !== -1) {
       const dir = await appCacheDir();
       const filePath = `${dir}${state.items[idx].transcripts}`;
-      await removeFile(filePath);
+      const isFile = await exists(filePath);
+      if (isFile) await removeFile(filePath);
       const translatePath = `${dir}${state.items[idx].translate}`;
-      await removeFile(translatePath);
+      const _isFile = await exists(translatePath);
+      if (_isFile) await removeFile(translatePath);
     }
     dispatch({ type: 'DELETE_ITEM', payload: fileName });
     setFileSignal(true);
@@ -136,6 +146,13 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     if (textlines === null) return;
     const filePath = await saveTranscriptsToJSON(textlines);
     dispatch({ type: 'UPDATE_ITEM', payload: filePath });
+    setFileSignal(true);
+  };
+
+  const updateTranslateFile = async (textlines: TextLine[] | null) => {
+    if (textlines === null) return;
+    const filePath = await saveTranscriptsToJSON(textlines);
+    dispatch({ type: 'UPDATE_TRANS_ITEM', payload: filePath });
     setFileSignal(true);
   };
 
@@ -179,6 +196,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
         deleteItem,
         updateItem,
         updateProgress,
+        updateTranslateFile,
         currentFile: state.currentFile,
         setCurrentFile: (file: string | null) =>
           dispatch({ type: 'SET_CURRENT_FILE', payload: file }),

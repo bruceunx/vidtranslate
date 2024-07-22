@@ -1,35 +1,47 @@
 import * as React from 'react';
-import { HiMiniLanguage } from 'react-icons/hi2';
+import { HiMiniLanguage, HiOutlinePauseCircle } from 'react-icons/hi2';
 import LangChose from './LangChose';
 import { TextLine } from '../types';
 import { invoke } from '@tauri-apps/api';
-import { UnlistenFn, listen } from '@tauri-apps/api/event';
 import { useData } from '../store/DataContext';
 import { Item } from '../types';
 import { readTranscript } from '../utils/file';
 import TextCards from './TextCards';
+import Spinner from './Spinner';
+import ProgressBar from './ProgressBar';
 
 interface TranslateProps {
   lines: TextLine[];
+  progress: number;
   translatedLines: TextLine[];
   setTranslatedLines: (lines: TextLine[]) => void;
 }
 
-interface DataStream {
-  index: number;
-  output: string;
-}
-
 const Translate = ({
   lines,
+  progress,
   translatedLines,
   setTranslatedLines,
 }: TranslateProps) => {
-  const { items, currentFile } = useData();
+  const {
+    isInProgress,
+    updateProgress,
+    items,
+    currentFile,
+    updateTranslateFile,
+  } = useData();
   const [language, setLanguage] = React.useState<string>('en');
+  // const [translatedLines, setTranslatedLines] = React.useState<TextLine[]>([]);
+
+  const [transformProgress, setTransformProgress] = React.useState(0);
+
+  const handleStop = async () => {
+    await invoke('stop_llama', {});
+    updateProgress(false);
+  };
 
   const handleTranslate = async () => {
-    setTranslatedLines([]);
+    updateProgress(true);
     const data = lines.map((line) => `<2${language}>${line.text_str}`);
     try {
       await invoke('run_llama', {
@@ -38,42 +50,32 @@ const Translate = ({
       });
     } catch (error) {
       console.error('Error starting sidecar:', error);
+      return;
     }
-  };
 
-  React.useEffect(() => {
-    let unlisten: UnlistenFn;
-    const initListen = async () => {
-      unlisten = await listen('data_stream', (event) => {
-        const data = event.payload as DataStream;
-        const idx = data.index;
-        setTranslatedLines([
-          ...translatedLines,
-          {
-            text_str: data.output,
-            time_start: lines[idx].time_start,
-            time_end: lines[idx].time_end,
-          },
-        ]);
-      });
-    };
-    if (lines) {
-      initListen();
-    }
-    return () => {
-      if (unlisten) {
-        unlisten();
-        console.log('Stopped listening for events');
+    let line = 'start';
+    let id = 0;
+    const newLines = [];
+    while (line) {
+      line = await invoke('get_llama_txt');
+      if (line === 'end') break;
+      if (id === 0 && line === 'start') {
+        id === 0;
+        setTranslatedLines([]);
+        continue;
       }
-    };
-  }, [lines]);
-
-  React.useEffect(() => {
-    const stop_llama = async () => {
-      await invoke('stop_llama', {});
-    };
-    stop_llama();
-  }, []);
+      const newLine = {
+        time_start: lines[id].time_start,
+        time_end: lines[id].time_end,
+        text_str: line,
+      };
+      setTranslatedLines((pre) => [...pre, newLine]);
+      id += 1;
+      newLines.push(newLine);
+    }
+    updateTranslateFile(newLines);
+    updateProgress(false);
+  };
 
   React.useEffect(() => {
     const handleCurrentFile = async (item: Item) => {
@@ -83,30 +85,52 @@ const Translate = ({
         setTranslatedLines(_lines);
       }
     };
-    if (currentFile === '') return;
+    if (currentFile === '') {
+      setTranslatedLines([]);
+      return;
+    }
     const item = items.find((obj) => obj.filePath === currentFile);
     if (item) {
       handleCurrentFile(item);
-      console.log(item);
     }
   }, [currentFile]);
 
+  React.useEffect(() => {
+    setTransformProgress((translatedLines.length / lines.length) * 100);
+  }, [translatedLines]);
+
   return (
     <>
-      <div className="flex space-x-3">
+      <div className="flex space-x-2 mb-1">
         <LangChose setLanguage={setLanguage} />
-        <button
-          className="border border-gray-700 p-2 rounded-md hover:bg-gray-700 active:text-gray-400"
-          onClick={handleTranslate}
-          disabled={lines.length === 0}
-        >
-          <HiMiniLanguage className="h-5 w-5" />
-        </button>
-        <button>save</button>
+        {isInProgress ? (
+          <button
+            className="border border-gray-700 px-1 rounded-md hover:bg-gray-700 active:text-gray-400"
+            onClick={handleStop}
+            disabled={lines.length === 0}
+          >
+            <HiOutlinePauseCircle className="h-5 w-5" />
+          </button>
+        ) : (
+          <button
+            className="border border-gray-700 px-1 rounded-md hover:bg-gray-700 active:text-gray-400"
+            onClick={handleTranslate}
+            disabled={lines.length === 0}
+          >
+            <HiMiniLanguage className="h-5 w-5" />
+          </button>
+        )}
+
+        {isInProgress && (
+          <div className="flex items-center w-full space-x-1">
+            <Spinner size="24px" color="#007bff" thickness="4px" />
+            <ProgressBar progress={transformProgress} />
+          </div>
+        )}
       </div>
 
       <div>
-        <TextCards lines={translatedLines} progress={0} />
+        <TextCards lines={translatedLines} progress={progress} margin={180} />
       </div>
     </>
   );

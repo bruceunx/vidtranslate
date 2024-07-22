@@ -4,7 +4,8 @@ mod commands;
 mod db;
 mod translate;
 mod video;
-use std::sync::{atomic::AtomicBool, Arc};
+// use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
 trait New {
@@ -16,19 +17,24 @@ struct VideoState {
     recv: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
     tsender: Arc<Mutex<mpsc::Sender<String>>>,
     trecv: Arc<Mutex<mpsc::Receiver<String>>>,
-    stop_llama: Arc<AtomicBool>,
+    llama_sender: Arc<Mutex<mpsc::Sender<String>>>,
+    llama_recv: Arc<Mutex<mpsc::Receiver<String>>>,
+    // stop_llama: Arc<AtomicBool>,
 }
 
 impl New for VideoState {
     fn new() -> VideoState {
         let (tx, rx) = mpsc::channel(1);
         let (ttx, trx) = mpsc::channel(1);
+        let (ltx, lrx) = mpsc::channel(1);
         let video_state = VideoState {
             sender: Arc::new(Mutex::new(tx)),
             recv: Arc::new(Mutex::new(rx)),
             tsender: Arc::new(Mutex::new(ttx)),
             trecv: Arc::new(Mutex::new(trx)),
-            stop_llama: Arc::new(AtomicBool::new(false)),
+            llama_sender: Arc::new(Mutex::new(ltx)),
+            llama_recv: Arc::new(Mutex::new(lrx)),
+            // stop_llama: Arc::new(AtomicBool::new(false)),
         };
         return video_state;
     }
@@ -48,6 +54,7 @@ fn main() {
             commands::get_whisper_txt,
             translate::run_llama,
             translate::stop_llama,
+            translate::get_llama_txt,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -14,12 +14,7 @@ const TextCard: React.FC<TextCardProps> = ({
   time_start,
   time_end,
   text_str,
-}: {
-  activate: boolean;
-  time_start: number;
-  time_end: number;
-  text_str: string;
-}) => {
+}: TextCardProps) => {
   return (
     <p className={`${activate ? 'bg-[#155c9a]' : ''} p-1 text-gray-200`}>
       <small className="text-sm text-gray-400 p-1 bg-gray-900 rounded-md mr-2 w-20">
@@ -30,21 +25,21 @@ const TextCard: React.FC<TextCardProps> = ({
   );
 };
 
-const TextCards = ({
-  lines,
-  progress,
-}: {
+interface TextCardsProps {
   lines: TextLine[];
   progress: number;
-}) => {
+  margin: number;
+}
+
+const TextCards = ({ lines, progress, margin }: TextCardsProps) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = React.useState(
-    window.innerHeight - 150
+    window.innerHeight - margin
   );
 
   React.useEffect(() => {
     const handleResize = () => {
-      setContentHeight(window.innerHeight - 150);
+      setContentHeight(window.innerHeight - margin);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

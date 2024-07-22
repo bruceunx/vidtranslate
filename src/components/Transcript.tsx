@@ -5,6 +5,7 @@ import TextCards from './TextCards';
 import { TextLine } from '../types';
 import Spinner from './Spinner';
 import Translate from './Translate';
+import { useData } from '../store/DataContext';
 
 interface TranscriptProps {
   lines: TextLine[];
@@ -20,11 +21,9 @@ const Transcript = ({
   isTransform,
 }: TranscriptProps) => {
   const [transformProgress, setTransformProgress] = React.useState(0);
-  const [translatedLines, setTranslatedLines] = React.useState<TextLine[]>([]);
 
-  const handleTabChange = (value: string) => {
-    console.log(value);
-  };
+  const [translatedLines, setTranslatedLines] = React.useState<TextLine[]>([]);
+  const { isInProgress } = useData();
 
   React.useEffect(() => {
     if (duration === 0 || lines.length === 0) {
@@ -39,16 +38,17 @@ const Transcript = ({
     <Tabs.Root
       className="flex flex-col w-full h-full"
       defaultValue="transcript"
-      onValueChange={handleTabChange}
     >
       <Tabs.List className="flex shrink-0 text-gray-400 space-x-5 p-3">
         <Tabs.Trigger
+          disabled={isInProgress}
           value="transcript"
           className="data-[state=active]:text-white data-[state=active]:font-bold"
         >
           Transcript
         </Tabs.Trigger>
         <Tabs.Trigger
+          disabled={isInProgress}
           value="translate"
           className="data-[state=active]:text-white data-[state=active]:font-bold"
         >
@@ -68,7 +68,7 @@ const Transcript = ({
           )}
         </div>
         <div>
-          <TextCards lines={lines} progress={progress} />
+          <TextCards lines={lines} progress={progress} margin={150} />
         </div>
       </Tabs.Content>
       <Tabs.Content
@@ -77,6 +77,7 @@ const Transcript = ({
       >
         <Translate
           lines={lines}
+          progress={progress}
           translatedLines={translatedLines}
           setTranslatedLines={setTranslatedLines}
         />
