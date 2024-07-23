@@ -53,6 +53,7 @@ fn main() {
             commands::stop_whisper,
             commands::get_whisper_txt,
             translate::run_llama,
+            translate::run_llama_stream,
             translate::stop_llama,
             translate::get_llama_txt,
         ])

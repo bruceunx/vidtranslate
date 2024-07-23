@@ -72,6 +72,7 @@ const Translate = ({
     const newLines = [];
     do {
       line = await invoke('get_llama_txt');
+      console.log(line);
       if (line.text_str === 'end') break;
       if (line.text_str === 'start') {
         setTranslatedLines([]);
