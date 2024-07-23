@@ -7,7 +7,7 @@ import {
   AiOutlinePlus,
   AiOutlineMinus,
   AiOutlineSetting,
-  AiOutlineDownload,
+  AiOutlineSave,
 } from 'react-icons/ai';
 import {
   HiMiniArrowLeftOnRectangle,
@@ -118,9 +118,9 @@ function App() {
     if (run_ffmpeg_info === 'ok') {
       const resource = await getResourceDir();
       await invoke('run_whisper', { model_fold: resource, lang: lang });
-      let line = 'start';
+      let line: string;
       let id = 0;
-      while (line) {
+      do {
         line = await invoke('get_whisper_txt');
         if (line === 'end') break;
         const line_text = transformString(line);
@@ -131,7 +131,7 @@ function App() {
           newLines.push(line_text);
         }
         id += 1;
-      }
+      } while (line);
     }
     updateItem(newLines);
   };
@@ -371,9 +371,11 @@ function App() {
               data-tauri-drag-region
               className="flex flex-row justify-end items-center py-2 pr-1 space-x-3 text-gray-400"
             >
-              <button onClick={handleFileChange} className="hover:text-white">
-                <AiOutlinePlus />
-              </button>
+              {!isInProgress && (
+                <button onClick={handleFileChange} className="hover:text-white">
+                  <AiOutlinePlus />
+                </button>
+              )}
               {currentFile && !isInProgress && (
                 <button onClick={handleDeleteItem} className="hover:text-white">
                   <AiOutlineMinus />
@@ -403,7 +405,7 @@ function App() {
             <div className="space-x-2">
               {lines.length > 0 && (
                 <button onClick={onSaveTranscripts}>
-                  <AiOutlineDownload />
+                  <AiOutlineSave />
                 </button>
               )}
               <button onClick={toggleRightSider}>

@@ -1,5 +1,6 @@
 import { HiOutlineChevronUpDown } from 'react-icons/hi2';
 import * as Select from '@radix-ui/react-select';
+import { languages } from '../data';
 
 const LangDetect = ({ setLang }: { setLang: (lang: string) => void }) => {
   const onChange = (value: string) => {
@@ -26,18 +27,16 @@ const LangDetect = ({ setLang }: { setLang: (lang: string) => void }) => {
             >
               <Select.ItemText>Auto</Select.ItemText>
             </Select.Item>
-            <Select.Item
-              value="en"
-              className="px-2 hover:bg-blue-focus hover:outline-none focus:outline-none"
-            >
-              <Select.ItemText>English</Select.ItemText>
-            </Select.Item>
-            <Select.Item
-              value="zh"
-              className="px-2 hover:bg-blue-focus hover:outline-none focus:outline-none"
-            >
-              <Select.ItemText>简体中文</Select.ItemText>
-            </Select.Item>
+
+            {languages.map((lang, index) => (
+              <Select.Item
+                key={index}
+                value={lang.code}
+                className="hover:bg-blue-focus px-2 hover:outline-none focus:outline-none"
+              >
+                <Select.ItemText>{lang.language}</Select.ItemText>
+              </Select.Item>
+            ))}
           </Select.Viewport>
         </Select.Content>
       </Select.Portal>

@@ -21,9 +21,10 @@ const Transcript = ({
   isTransform,
 }: TranscriptProps) => {
   const [transformProgress, setTransformProgress] = React.useState(0);
+  const [value, setValue] = React.useState<string>('Transcript');
 
   const [translatedLines, setTranslatedLines] = React.useState<TextLine[]>([]);
-  const { isInProgress } = useData();
+  const { isInProgress, currentFile } = useData();
 
   React.useEffect(() => {
     if (duration === 0 || lines.length === 0) {
@@ -34,10 +35,16 @@ const Transcript = ({
     setTransformProgress((line['time_start'] / duration) * 100);
   }, [lines]);
 
+  React.useEffect(() => {
+    setValue('transcript');
+  }, [currentFile]);
+
   return (
     <Tabs.Root
       className="flex flex-col w-full h-full"
       defaultValue="transcript"
+      value={value}
+      onValueChange={(value) => setValue(value)}
     >
       <Tabs.List className="flex shrink-0 text-gray-400 space-x-5 p-3">
         <Tabs.Trigger

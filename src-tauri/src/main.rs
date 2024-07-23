@@ -17,8 +17,8 @@ struct VideoState {
     recv: Arc<Mutex<mpsc::Receiver<Vec<u8>>>>,
     tsender: Arc<Mutex<mpsc::Sender<String>>>,
     trecv: Arc<Mutex<mpsc::Receiver<String>>>,
-    llama_sender: Arc<Mutex<mpsc::Sender<String>>>,
-    llama_recv: Arc<Mutex<mpsc::Receiver<String>>>,
+    llama_sender: Arc<Mutex<mpsc::Sender<translate::DataPayload>>>,
+    llama_recv: Arc<Mutex<mpsc::Receiver<translate::DataPayload>>>,
     // stop_llama: Arc<AtomicBool>,
 }
 
