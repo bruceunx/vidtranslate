@@ -5,7 +5,7 @@ import { TextLine } from '../types';
 import { invoke } from '@tauri-apps/api';
 import { useData } from '../store/DataContext';
 import { Item } from '../types';
-import { readTranscript, saveToFile } from '../utils/file';
+import { getResourceDir, readTranscript, saveToFile } from '../utils/file';
 import TextCards from './TextCards';
 import Spinner from './Spinner';
 import ProgressBar from './ProgressBar';
@@ -57,10 +57,11 @@ const Translate = ({
 
   const handleTranslate = async () => {
     updateProgress(true);
+    const resource = await getResourceDir();
     try {
       await invoke('run_llama', {
         lines: lines,
-        use_model_str: '/Volumes/space/Download/madlad400-3b-mt-q4_0.gguf',
+        model_fold: resource,
         target_lang: language,
       });
     } catch (error) {
@@ -72,7 +73,6 @@ const Translate = ({
     const newLines = [];
     do {
       line = await invoke('get_llama_txt');
-      console.log(line);
       if (line.text_str === 'end') break;
       if (line.text_str === 'start') {
         setTranslatedLines([]);

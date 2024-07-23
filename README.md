@@ -16,4 +16,4 @@
     - [x] save file to srt or vvt
     - [x] translate with gpt2 or llama
     - [ ] setting modal
-    - [ ] adjust llama.cpp to handle file as input
+    - [x] adjust llama.cpp to handle file as input
