@@ -38,6 +38,7 @@ import VideoText from './components/VideoText';
 import VidoItems from './components/VideoItems';
 import { useData } from './store/DataContext';
 import AudioLines from './components/AudioLines';
+import Settings from './components/Setting';
 
 function App() {
   const [lang, setLang] = React.useState<string>('auto');
@@ -381,9 +382,7 @@ function App() {
                   <AiOutlineMinus />
                 </button>
               )}
-              <button className="hover:text-white">
-                <AiOutlineSetting />
-              </button>
+              <Settings />
             </div>
           </div>
           <div className="flex flex-col px-2 py-1 h-full">

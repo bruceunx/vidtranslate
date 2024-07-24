@@ -58,7 +58,7 @@ const Translate = ({
   const handleTranslate = async () => {
     updateProgress(true);
     try {
-      await invoke('run_llama', {
+      await invoke('run_llama_stream', {
         lines: lines,
         use_model_str: '/Volumes/space/Download/madlad400-3b-mt-q4_0.gguf',
         target_lang: language,
