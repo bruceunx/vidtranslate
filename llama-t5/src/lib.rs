@@ -40,11 +40,6 @@ impl T5ModelBuilder {
         }
 
         if cfg!(target_os = "macos") {
-            device = Device::new_cuda(0)?;
-        }
-
-        #[cfg(target_os = "macos")]
-        {
             device = Device::new_metal(0)?;
         }
 

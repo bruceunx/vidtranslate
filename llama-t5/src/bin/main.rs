@@ -30,9 +30,18 @@ struct T5ModelBuilder {
     weights_filename: PathBuf,
 }
 
+#[allow(unused_assignments)]
 impl T5ModelBuilder {
     pub fn load(args: &ModelConfig) -> Result<(Self, Tokenizer)> {
-        let device = Device::new_metal(0)?;
+        let mut device = Device::Cpu;
+
+        if cfg!(feature = "cuda") {
+            device = Device::new_cuda(0)?;
+        }
+
+        if cfg!(target_os = "macos") {
+            device = Device::new_metal(0)?;
+        }
 
         let config_filename = Self::get_local_or_remote_file(&args.config_file)?;
         let tokenizer_filename = Self::get_local_or_remote_file(&args.tokenizer_file)?;
