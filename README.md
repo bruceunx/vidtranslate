@@ -15,5 +15,6 @@
     - [x] save transripts to tmp files with time tag
     - [x] save file to srt or vvt
     - [x] translate with gpt2 or llama
-    - [ ] setting modal
     - [x] adjust llama.cpp to handle file as input
+    - [ ] setting modal
+    - [ ] try candle crate to use t5
