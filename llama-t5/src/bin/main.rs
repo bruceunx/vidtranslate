@@ -11,8 +11,6 @@ struct ModelConfig {
     tokenizer_file: String,
     weight_file: String,
     temperature: f64,
-    repeat_penalty: f32,
-    repeat_last_n: usize,
 }
 
 impl Default for ModelConfig {
@@ -22,8 +20,6 @@ impl Default for ModelConfig {
             tokenizer_file: String::from("/Users/bruce/Download/tokenizer.json"),
             weight_file: String::from("/Users/bruce/Download/model-q4k.gguf"),
             temperature: 0.8,
-            repeat_penalty: 1.1,
-            repeat_last_n: 64,
         }
     }
 }
@@ -36,7 +32,7 @@ struct T5ModelBuilder {
 
 impl T5ModelBuilder {
     pub fn load(args: &ModelConfig) -> Result<(Self, Tokenizer)> {
-        let device = Device::Cpu;
+        let device = Device::new_metal(0)?;
 
         let config_filename = Self::get_local_or_remote_file(&args.config_file)?;
         let tokenizer_filename = Self::get_local_or_remote_file(&args.tokenizer_file)?;
@@ -57,7 +53,7 @@ impl T5ModelBuilder {
     }
 
     pub fn build_model(&self) -> Result<t5::T5ForConditionalGeneration> {
-        let device = Device::Cpu;
+        let device = &self.device;
         let vb = t5::VarBuilder::from_gguf(&self.weights_filename, &device)?;
         Ok(t5::T5ForConditionalGeneration::load(vb, &self.config)?)
     }
@@ -77,11 +73,6 @@ fn main() -> Result<()> {
         .map_err(Error::msg)?;
 
     let mut model = builder.build_model()?;
-    let mut output_token_ids = [builder
-        .config
-        .decoder_start_token_id
-        .unwrap_or(builder.config.pad_token_id) as u32]
-    .to_vec();
     let temperature = if model_config.temperature <= 0. {
         None
     } else {
@@ -89,57 +80,61 @@ fn main() -> Result<()> {
     };
     let mut logits_processor = LogitsProcessor::new(299792458, temperature, Some(0.95));
 
-    let prompt = "<2zh> hello world!";
-    let tokens = tokenizer
-        .encode(prompt, true)
-        .map_err(Error::msg)?
-        .get_ids()
+    let prompts = vec![
+        "<2zh> hello world!",
+        "<2zh> how are you today?",
+        "<2zh> can you suggest any new movie?",
+        "<2zh> what about this movie?",
+    ];
+
+    for prompt in prompts {
+        println!("{}", &prompt);
+        let mut output_token_ids = [builder
+            .config
+            .decoder_start_token_id
+            .unwrap_or(builder.config.pad_token_id) as u32]
         .to_vec();
-    let input_token_ids = Tensor::new(&tokens[..], device)?.unsqueeze(0)?;
-    let encoder_output = model.encode(&input_token_ids)?;
-    let start = std::time::Instant::now();
+        let tokens = tokenizer
+            .encode(prompt, true)
+            .map_err(Error::msg)?
+            .get_ids()
+            .to_vec();
+        let input_token_ids = Tensor::new(&tokens[..], device)?.unsqueeze(0)?;
+        let encoder_output = model.encode(&input_token_ids)?;
 
-    for index in 0.. {
-        if output_token_ids.len() > 512 {
-            break;
-        }
-        let decoder_token_ids = if index == 0 || !builder.config.use_cache {
-            Tensor::new(output_token_ids.as_slice(), device)?.unsqueeze(0)?
-        } else {
-            let last_token = *output_token_ids.last().unwrap();
-            Tensor::new(&[last_token], device)?.unsqueeze(0)?
-        };
-        let logits = model
-            .decode(&decoder_token_ids, &encoder_output)?
-            .squeeze(0)?;
-        let logits = if model_config.repeat_penalty == 1. {
-            logits
-        } else {
-            let start_at = output_token_ids
-                .len()
-                .saturating_sub(model_config.repeat_last_n);
-            candle_transformers::utils::apply_repeat_penalty(
-                &logits,
-                model_config.repeat_penalty,
-                &output_token_ids[start_at..],
-            )?
-        };
+        let mut output_string = String::new();
+        let start = std::time::Instant::now();
+        for index in 0.. {
+            if output_token_ids.len() > 512 {
+                break;
+            }
+            let decoder_token_ids = if index == 0 || !builder.config.use_cache {
+                Tensor::new(output_token_ids.as_slice(), device)?.unsqueeze(0)?
+            } else {
+                let last_token = *output_token_ids.last().unwrap();
+                Tensor::new(&[last_token], device)?.unsqueeze(0)?
+            };
+            let logits = model
+                .decode(&decoder_token_ids, &encoder_output)?
+                .squeeze(0)?;
 
-        let next_token_id = logits_processor.sample(&logits)?;
-        if next_token_id as usize == builder.config.eos_token_id {
-            break;
+            let next_token_id = logits_processor.sample(&logits)?;
+            if next_token_id as usize == builder.config.eos_token_id {
+                break;
+            }
+            output_token_ids.push(next_token_id);
+            if let Some(text) = tokenizer.id_to_token(next_token_id) {
+                let text = text.replace('▁', " ").replace("<0x0A>", "\n");
+                output_string += &text;
+            }
         }
-        output_token_ids.push(next_token_id);
-        if let Some(text) = tokenizer.id_to_token(next_token_id) {
-            let text = text.replace('▁', " ").replace("<0x0A>", "\n");
-            print!("{text}");
-        }
+        let dt = start.elapsed();
+        println!(
+            "{} tokens generated ({:.2} token/s)",
+            output_token_ids.len(),
+            output_token_ids.len() as f64 / dt.as_secs_f64(),
+        );
+        println!("{}", output_string);
     }
-    let dt = start.elapsed();
-    println!(
-        "\n{} tokens generated ({:.2} token/s)\n",
-        output_token_ids.len(),
-        output_token_ids.len() as f64 / dt.as_secs_f64(),
-    );
     Ok(())
 }
