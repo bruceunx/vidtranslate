@@ -27,7 +27,7 @@ const initialState: ModelState = {
       name: 'Madlab Model 3B',
       description: 'Medium quality translation model supports multi-languages',
       downloadLink:
-        'https://huggingface.co/jbochi/madlad400-3b-mt/resolve/main/model-q4k.gguf?download=true',
+        'https://huggingface.co/notjjustnumbers/madlad400-3b-mt-Q4_K_M-GGUF/resolve/main/madlad400-3b-mt-q4_k_m.gguf?download=true',
       localPath: '',
     },
   ],

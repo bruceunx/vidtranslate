@@ -2,10 +2,14 @@
 
 ## Test
 
-## Models
+## Whisper Models for stt
 
 - `https://ggml.ggerganov.com/ggml-model-whisper-large-q5_0.bin`
 - `https://ggml.ggerganov.com/ggml-model-whisper-medium-q5_0.bin`
+
+## Llama models for translating
+
+- `https://huggingface.co/notjjustnumbers/madlad400-3b-mt-Q4_K_M-GGUF/resolve/main/madlad400-3b-mt-q4_k_m.gguf?download=true`
 
 ## TODO
 
@@ -15,5 +19,5 @@
     - [x] save transripts to tmp files with time tag
     - [x] save file to srt or vvt
     - [x] translate with gpt2 or llama
-    - [ ] setting modal
-    - [ ] adjust llama.cpp to handle file as input
+    - [x] setting modal
+    - [x] adjust llama.cpp to handle file as input
