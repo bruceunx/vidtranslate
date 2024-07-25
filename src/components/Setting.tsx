@@ -48,13 +48,14 @@ const Settings = () => {
                   />
                 )}
               </div>
+
               <Separator className="border-t border-gray-600 my-2" />
               <ModelManager
                 models={state.whisper_models}
                 modelType={'WHISPER'}
               />
             </div>
-            <div className="flex flex-col space-y-5 mx-2 py-2">
+            <div className="flex flex-col space-y-4 py-2">
               <div className="flex flex-row justify-between items-center">
                 <p>Translate Model</p>
                 {llamaModels && (

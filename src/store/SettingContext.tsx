@@ -10,13 +10,15 @@ const initialState: ModelState = {
     {
       name: 'Medium Model',
       description: 'Medium quality model supports multi-languages',
-      downloadLink: '',
+      downloadLink:
+        'https://ggml.ggerganov.com/ggml-model-whisper-medium-q5_0.bin',
       localPath: '',
     },
     {
       name: 'Large Model',
       description: 'Medium quality model supports multi-languages',
-      downloadLink: '',
+      downloadLink:
+        'https://ggml.ggerganov.com/ggml-model-whisper-large-q5_0.bin',
       localPath: '',
     },
   ],
@@ -24,7 +26,8 @@ const initialState: ModelState = {
     {
       name: 'Madlab Model 3B',
       description: 'Medium quality translation model supports multi-languages',
-      downloadLink: '',
+      downloadLink:
+        'https://huggingface.co/jbochi/madlad400-3b-mt/resolve/main/model-q4k.gguf?download=true',
       localPath: '',
     },
   ],
