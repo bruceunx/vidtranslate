@@ -21,3 +21,4 @@
     - [x] translate with gpt2 or llama
     - [x] setting modal
     - [x] adjust llama.cpp to handle file as input
+    - [ ] add license
