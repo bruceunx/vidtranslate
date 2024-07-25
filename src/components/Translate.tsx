@@ -11,6 +11,7 @@ import Spinner from './Spinner';
 import ProgressBar from './ProgressBar';
 import { AiOutlineSave } from 'react-icons/ai';
 import { save } from '@tauri-apps/api/dialog';
+import { useSettingData } from '../store/SettingContext';
 
 interface TranslateProps {
   lines: TextLine[];
@@ -32,6 +33,9 @@ const Translate = ({
     currentFile,
     updateTranslateFile,
   } = useData();
+
+  const { state } = useSettingData();
+
   const [language, setLanguage] = React.useState<string>('en');
 
   const [transformProgress, setTransformProgress] = React.useState(0);
@@ -57,10 +61,16 @@ const Translate = ({
 
   const handleTranslate = async () => {
     updateProgress(true);
+    if (state.currentLlamaModel === '') return;
+    const models = state.llama_models.filter(
+      (model) => model.name === state.currentLlamaModel
+    );
+    if (models.length == 0) return;
+    const modelPath = models[0].localPath;
     try {
       await invoke('run_llama_stream', {
         lines: lines,
-        use_model_str: '/Volumes/space/Download/madlad400-3b-mt-q4_0.gguf',
+        model_path: modelPath,
         target_lang: language,
       });
     } catch (error) {
@@ -72,7 +82,6 @@ const Translate = ({
     const newLines = [];
     do {
       line = await invoke('get_llama_txt');
-      console.log(line);
       if (line.text_str === 'end') break;
       if (line.text_str === 'start') {
         setTranslatedLines([]);

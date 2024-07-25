@@ -55,7 +55,7 @@ const Transcript = ({
           Transcript
         </Tabs.Trigger>
         <Tabs.Trigger
-          disabled={isInProgress}
+          disabled={isInProgress || lines.length === 0}
           value="translate"
           className="data-[state=active]:text-white data-[state=active]:font-bold"
         >

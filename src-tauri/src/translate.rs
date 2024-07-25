@@ -1,5 +1,6 @@
 use crate::VideoState;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::sync::Arc;
 use tauri::api::path::cache_dir;
 use tauri::api::process::{Command, CommandEvent};
@@ -113,7 +114,7 @@ pub async fn stop_llama(state: State<'_, Mutex<VideoState>>) -> Result<(), Strin
 pub async fn run_llama_stream(
     state: State<'_, Mutex<VideoState>>,
     lines: Vec<DataPayload>,
-    use_model_str: String,
+    model_path: String,
     target_lang: String,
 ) -> Result<(), String> {
     let cache_dir = cache_dir().ok_or("failed")?;
@@ -122,6 +123,11 @@ pub async fn run_llama_stream(
 
     if !folder_path.exists() {
         std::fs::create_dir_all(&folder_path).map_err(|e| format!("{}", e))?;
+    }
+
+    let use_model = Path::new(&model_path);
+    if !use_model.exists() {
+        return Err("model not found".to_string());
     }
 
     let txt_file_path = folder_path
@@ -140,7 +146,7 @@ pub async fn run_llama_stream(
 
     let args: Vec<String> = vec![
         String::from("-m"),
-        use_model_str.clone(),
+        model_path.clone(),
         String::from("-s"),
         String::from("2024"),
         String::from("-f"),

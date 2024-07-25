@@ -3,12 +3,7 @@ import { convertFileSrc, invoke } from '@tauri-apps/api/tauri';
 import { open, save } from '@tauri-apps/api/dialog';
 import { appWindow } from '@tauri-apps/api/window';
 
-import {
-  AiOutlinePlus,
-  AiOutlineMinus,
-  AiOutlineSetting,
-  AiOutlineSave,
-} from 'react-icons/ai';
+import { AiOutlinePlus, AiOutlineMinus, AiOutlineSave } from 'react-icons/ai';
 import {
   HiMiniArrowLeftOnRectangle,
   HiMiniArrowRightOnRectangle,
@@ -27,7 +22,6 @@ import {
   getFileName,
   getFileTitle,
   getFileTypeFromExtension,
-  getResourceDir,
   isAudioFile,
   readTranscript,
   saveToFile,
@@ -39,6 +33,7 @@ import VidoItems from './components/VideoItems';
 import { useData } from './store/DataContext';
 import AudioLines from './components/AudioLines';
 import Settings from './components/Setting';
+import { useSettingData } from './store/SettingContext';
 
 function App() {
   const [lang, setLang] = React.useState<string>('auto');
@@ -83,6 +78,8 @@ function App() {
     }
   };
 
+  const { state } = useSettingData();
+
   const handleInsertItem = async (
     file: string,
     fileName: string,
@@ -110,22 +107,27 @@ function App() {
   };
 
   const handleWhisper = async (file: string) => {
+    if (state.currentWhisperModel === '') return;
+    const models = state.whisper_models.filter(
+      (model) => model.name === state.currentWhisperModel
+    );
+    if (models.length === 0) return;
+    const modelPath = models[0].localPath;
+
     const run_ffmpeg_info: string = await invoke('run_ffmpeg', {
       file_path: file,
     });
-
     const newLines = [];
 
     if (run_ffmpeg_info === 'ok') {
-      const resource = await getResourceDir();
-      await invoke('run_whisper', { model_fold: resource, lang: lang });
+      await invoke('run_whisper', { model_path: modelPath, lang: lang });
       let line: string;
       let id = 0;
       do {
         line = await invoke('get_whisper_txt');
         if (line === 'end') break;
+        if (id === 0 && line !== 'start') continue;
         const line_text = transformString(line);
-        if (id === 0 && line_text?.time_start !== 0) continue;
         if (id === 0) setCurrentLine(line_text?.text_str || '');
         if (line_text !== null) {
           setLines((prev) => [...prev, line_text]);
@@ -134,7 +136,7 @@ function App() {
         id += 1;
       } while (line);
     }
-    updateItem(newLines);
+    if (newLines.length > 0) updateItem(newLines);
   };
 
   const transformVideo = async (file: string, fileName: string) => {

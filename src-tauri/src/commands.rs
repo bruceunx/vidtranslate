@@ -84,7 +84,7 @@ pub async fn run_ffmpeg(file_path: String) -> Result<String, String> {
 #[tauri::command(rename_all = "snake_case")]
 pub async fn run_whisper(
     state: State<'_, Mutex<VideoState>>,
-    model_fold: String,
+    model_path: String,
     lang: String,
 ) -> Result<(), String> {
     let cache_dir = cache_dir().ok_or("failed")?;
@@ -100,17 +100,15 @@ pub async fn run_whisper(
 
     let wav_file_str = wav_file_path.to_str().ok_or("failed")?.to_string();
 
-    let _fold = Path::new(&model_fold);
-    let use_model = _fold.join("resources").join("models").join("large.bin");
-
+    let use_model = Path::new(&model_path);
     if !use_model.exists() {
         return Err("model not found".to_string());
     }
 
-    let use_model_str = use_model.to_str().ok_or("failed")?.to_string();
+    // let use_model_str = use_model.to_str().ok_or("failed")?.to_string();
     let mut args: Vec<String> = vec![
         String::from("-m"),
-        use_model_str.clone(),
+        model_path.clone(),
         String::from("-f"),
         wav_file_str.clone(),
         String::from("-np"),
@@ -137,6 +135,7 @@ pub async fn run_whisper(
         state.trecv = Arc::new(Mutex::new(trx));
     }
     tauri::async_runtime::spawn(async move {
+        tx_clone.send("start".to_string()).await.expect("error");
         while let Some(event) = rx.recv().await {
             if let CommandEvent::Stdout(line) = event {
                 if tx_clone.send(line).await.is_err() {
