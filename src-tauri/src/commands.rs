@@ -137,6 +137,7 @@ pub async fn run_whisper(
         state.trecv = Arc::new(Mutex::new(trx));
     }
     tauri::async_runtime::spawn(async move {
+        tx_clone.send("start".to_string()).await.expect("error");
         while let Some(event) = rx.recv().await {
             if let CommandEvent::Stdout(line) = event {
                 if tx_clone.send(line).await.is_err() {

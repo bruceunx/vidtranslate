@@ -98,6 +98,7 @@ export function isAudioFile(filePath: string): boolean {
 }
 
 export async function readTranscript(fileName: string): Promise<TextLine[]> {
+  if (fileName === '') return [];
   try {
     const dir = await appCacheDir();
     const filePath = `${dir}${fileName}`;

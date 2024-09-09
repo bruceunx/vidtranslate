@@ -123,6 +123,10 @@ function App() {
       do {
         line = await invoke('get_whisper_txt');
         if (line === 'end') break;
+        if (id === 0 && line === 'start') {
+          id += 1;
+          continue;
+        }
         const line_text = transformString(line);
         if (id === 0 && line_text?.time_start !== 0) continue;
         if (id === 0) setCurrentLine(line_text?.text_str || '');
