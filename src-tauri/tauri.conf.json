@@ -15,6 +15,7 @@
         "binaries/ffmpeg",
         "binaries/ffprobe",
         "binaries/llama",
+        "binaries/llama_stream",
         "binaries/whisper"
       ],
       "resources": ["resources/*"]
@@ -47,6 +48,11 @@
           },
           {
             "name": "binaries/llama",
+            "sidecar": true,
+            "args": true
+          },
+          {
+            "name": "binaries/llama_stream",
             "sidecar": true,
             "args": true
           }

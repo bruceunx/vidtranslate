@@ -126,7 +126,10 @@ function App() {
       do {
         line = await invoke('get_whisper_txt');
         if (line === 'end') break;
-        if (id === 0 && line !== 'start') continue;
+        if (id === 0 && line === 'start') {
+          id += 1;
+          continue;
+        }
         const line_text = transformString(line);
         if (id === 0) setCurrentLine(line_text?.text_str || '');
         if (line_text !== null) {

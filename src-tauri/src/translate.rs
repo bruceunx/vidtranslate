@@ -21,13 +21,25 @@ pub struct DataPayload {
 pub async fn run_llama(
     state: State<'_, Mutex<VideoState>>,
     lines: Vec<DataPayload>,
-    use_model_str: String,
+    model_fold: String,
     target_lang: String,
 ) -> Result<(), String> {
+    let _fold = Path::new(&model_fold);
+    let use_model = _fold
+        .join("resources")
+        .join("models")
+        .join("llama-model.gguf");
+
+    if !use_model.exists() {
+        return Err("model not found".to_string());
+    }
+
+    let use_model_str = use_model.to_str().ok_or("failed")?.to_string();
+
     let args: Vec<String> = vec![
         String::from("-m"),
         use_model_str.clone(),
-        String::from("--seed"),
+        String::from("-s"),
         String::from("2024"),
         String::from("-p"),
     ];
@@ -50,7 +62,9 @@ pub async fn run_llama(
         for line in lines {
             let mut new_args = args.clone();
             let new_text = format!("<2{}> {}", target_lang, line.text_str);
+
             new_args.push(new_text);
+
             let output = Command::new_sidecar("llama")
                 .expect("Failed to create `llama` command")
                 .args(new_args)
@@ -162,7 +176,7 @@ pub async fn run_llama_stream(
         state.llama_recv = Arc::new(Mutex::new(trx));
     }
 
-    let (mut rx, _) = Command::new_sidecar("llama")
+    let (mut rx, _) = Command::new_sidecar("llama_stream")
         .expect("failed to create `llama` binary command")
         .args(args)
         .spawn()

@@ -13,12 +13,15 @@
 
 ## TODO
 
-    - [x] transript screen auto scroll
-    - [x] file list
-    - [x] mp3 format
-    - [x] save transripts to tmp files with time tag
-    - [x] save file to srt or vvt
-    - [x] translate with gpt2 or llama
-    - [x] setting modal
-    - [x] adjust llama.cpp to handle file as input
-    - [ ] add license
+- [x] transript screen auto scroll
+- [x] file list
+- [x] mp3 format
+- [x] save transripts to tmp files with time tag
+- [x] save file to srt or vvt
+- [x] translate with gpt2 or llama
+- [x] setting modal
+- [x] adjust llama.cpp to handle file as input
+- [ ] move translate to app.tsx
+- [ ] refactoring app.tsx
+- [ ] add stop button to transcripts and translates
+- [ ] add license
