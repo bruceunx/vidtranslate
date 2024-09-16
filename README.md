@@ -23,3 +23,4 @@
 - [x] refactoring app.tsx
 - [x] add stop button to transcripts and translates
 - [x] add license
+- [ ] finish setting download models etc
