@@ -12,6 +12,7 @@ import { appCacheDir } from '@tauri-apps/api/path';
 import { Item, TextLine } from '../types';
 import { useSettingData } from './SettingContext';
 import { transformString } from '../utils/transript';
+import { readTranscript } from '../utils/file';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface Action {
@@ -82,6 +83,7 @@ const reducer = (state: State, action: Action): State => {
 interface DataContextType {
   items: Item[];
   lines: TextLine[];
+  translateLines: TextLine[];
   currentLine: string;
   isInProgress: boolean;
   currentFile: string;
@@ -93,16 +95,22 @@ interface DataContextType {
   updateProgress: (state: boolean | null) => void;
   setLang: (lang: string) => void;
   handleWhisper: (file: string) => void;
+  handleTranslate: (lang: string) => void;
   setLines: React.Dispatch<React.SetStateAction<TextLine[]>>;
   setCurrentLine: React.Dispatch<React.SetStateAction<string>>;
+  textType: string;
+  setTextType: React.Dispatch<React.SetStateAction<string>>;
   stopWhisper: () => void;
+  stopLlama: () => void;
   clearTranscripts: () => void;
 }
 
 const DataContext = React.createContext<DataContextType>({
   items: [],
   lines: [],
+  translateLines: [],
   currentLine: '',
+  textType: 'transcript',
   isInProgress: false,
   currentFile: '',
   setCurrentFile: () => {},
@@ -113,10 +121,13 @@ const DataContext = React.createContext<DataContextType>({
   updateProgress: () => {},
   setLang: () => {},
   handleWhisper: () => {},
+  handleTranslate: () => {},
   setLines: () => {},
   setCurrentLine: () => {},
   stopWhisper: () => {},
+  stopLlama: () => {},
   clearTranscripts: () => {},
+  setTextType: () => {},
 });
 
 const DataProvider = ({ children }: { children: React.ReactNode }) => {
@@ -125,7 +136,9 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const [lang, setLang] = React.useState<string>('auto');
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
+  const [textType, setTextType] = React.useState<string>('transcript');
   const [lines, setLines] = React.useState<TextLine[]>([]);
+  const [translateLines, setTranslateLines] = React.useState<TextLine[]>([]);
   const [currentLine, setCurrentLine] = React.useState<string>('');
   const hasMounted = React.useRef(false);
 
@@ -134,10 +147,52 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     updateProgress(false);
   };
 
+  const stopLlama = async () => {
+    await invoke('stop_llama');
+    updateProgress(false);
+  };
+
   const clearTranscripts = async () => {
     dispatch({ type: 'UPDATE_ITEM', payload: '' });
     setLines([]);
     await handleWhisper(state.currentFile);
+  };
+
+  const handleTranslate = async (lang: string) => {
+    updateProgress(true);
+    if (settingState.currentLlamaModel === '') return;
+    const models = settingState.llama_models.filter(
+      (model) => model.name === settingState.currentLlamaModel
+    );
+    if (models.length == 0) return;
+    const modelPath = models[0].localPath;
+    try {
+      await invoke('run_llama_stream', {
+        lines: lines,
+        model_path: modelPath,
+        target_lang: lang,
+      });
+    } catch (error) {
+      console.error('Error starting sidecar:', error);
+      return;
+    }
+
+    let line: TextLine;
+    const newLines = [];
+    do {
+      line = await invoke('get_llama_txt');
+      if (line.text_str === 'end') break;
+      if (line.text_str === 'start') {
+        setTranslateLines([]);
+        setCurrentLine(line?.text_str || '');
+        continue;
+      }
+      setTranslateLines((prev) => [...prev, line]);
+      newLines.push(line);
+    } while (line);
+
+    updateTranslateFile(newLines);
+    updateProgress(false);
   };
 
   const handleWhisper = async (file: string) => {
@@ -258,7 +313,6 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   React.useEffect(() => {
-    console.log('hasMounted.current ', state);
     if (!hasMounted.current) {
       hasMounted.current = true;
       return;
@@ -266,13 +320,39 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     updateFile();
   }, [state]);
 
+  React.useEffect(() => {
+    const handleCurrentFile = async (item: Item) => {
+      const _lines = await readTranscript(item.transcripts);
+      if (_lines.length > 0) {
+        setLines(_lines);
+        const _translateLines = await readTranscript(item.translate);
+        if (_translateLines.length > 0) {
+          setTranslateLines(_translateLines);
+        }
+      } else {
+        handleWhisper(item.filePath);
+      }
+    };
+    setLines([]);
+    setCurrentLine('');
+    setTranslateLines([]);
+    const item = state.items.find((obj) => obj.filePath === state.currentFile);
+    if (item) {
+      setTextType('transcript');
+      handleCurrentFile(item);
+    }
+  }, [state.currentFile]);
+
   return (
     <DataContext.Provider
       value={{
         items: state.items,
         isInProgress: state.isInProgress,
         lines,
+        translateLines,
         currentLine,
+        textType,
+        setTextType,
         insertItem,
         deleteItem,
         updateItem,
@@ -282,7 +362,9 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
         setCurrentLine,
         setLang,
         handleWhisper,
+        handleTranslate,
         stopWhisper,
+        stopLlama,
         clearTranscripts,
         currentFile: state.currentFile,
         setCurrentFile: (file: string | null) =>

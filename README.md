@@ -1,6 +1,4 @@
-# Tauri + React + Typescript
-
-## Test
+# VidTranslate
 
 ## Whisper Models for stt
 
@@ -21,7 +19,7 @@
 - [x] translate with gpt2 or llama
 - [x] setting modal
 - [x] adjust llama.cpp to handle file as input
-- [ ] move translate to app.tsx
-- [ ] refactoring app.tsx
-- [ ] add stop button to transcripts and translates
-- [ ] add license
+- [x] move translate to app.tsx
+- [x] refactoring app.tsx
+- [x] add stop button to transcripts and translates
+- [x] add license

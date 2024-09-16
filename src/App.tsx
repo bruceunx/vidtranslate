@@ -23,10 +23,8 @@ import {
   getFileTitle,
   getFileTypeFromExtension,
   isAudioFile,
-  readTranscript,
   saveToFile,
 } from './utils/file';
-import { Item } from './types';
 import VideoText from './components/VideoText';
 import VidoItems from './components/VideoItems';
 import { useData } from './store/DataContext';
@@ -55,15 +53,15 @@ function App() {
     lines,
     currentLine,
     isInProgress,
-    updateProgress,
     insertItem,
     setLang,
     handleWhisper,
-    setLines,
     setCurrentLine,
     setCurrentFile,
     currentFile,
     deleteItem,
+    textType,
+    translateLines,
   } = useData();
 
   const onSaveTranscripts = async () => {
@@ -123,11 +121,8 @@ function App() {
     }
     const fileName = getFileName(file);
     setCurrentFile(file);
-    setCurrentLine('');
-    setLines([]);
     setProgress(0);
     setIsPlay(false);
-    updateProgress(true);
 
     handleMediaLoad(file);
 
@@ -272,38 +267,28 @@ function App() {
   }, [currentLocation]);
 
   React.useEffect(() => {
-    if (lines.length === 0) return;
-    const targetIndex = lines.findIndex(
+    const _lines = textType === 'transcript' ? lines : translateLines;
+    if (_lines.length === 0) return;
+    const targetIndex = _lines.findIndex(
       (obj) => obj.time_start <= progress && obj.time_end >= progress
     );
     if (targetIndex === -1) return;
 
-    let current = lines[targetIndex].text_str;
+    let current = _lines[targetIndex].text_str;
     if (
-      targetIndex < lines.length - 1 &&
+      targetIndex < _lines.length - 1 &&
       lines[targetIndex + 1].time_start === progress
     ) {
-      current += lines[targetIndex + 1].text_str;
+      current += _lines[targetIndex + 1].text_str;
     }
     setCurrentLine(current);
   }, [progress]);
 
   React.useEffect(() => {
-    const handleCurrentFile = async (item: Item) => {
-      const _lines = await readTranscript(item.transcripts);
-      if (_lines.length > 0) {
-        setLines(_lines);
-        setCurrentLine(_lines[0].text_str);
-      } else {
-        handleWhisper(item.filePath);
-      }
-    };
     if (currentFile === '') {
       setVideoPath('');
       setRawPath('');
       setProgress(0);
-      setLines([]);
-      setCurrentLine('');
       setVideoDuration(0);
       if (videoRef.current) {
         videoRef.current.src = '';
@@ -312,7 +297,6 @@ function App() {
     } else {
       const item = items.find((obj) => obj.filePath === currentFile);
       if (item) {
-        handleCurrentFile(item);
         loadMediaMetadata(item.filePath);
         handleMediaLoad(item.filePath);
         setProgress(0);
@@ -382,7 +366,10 @@ function App() {
               <div className="h-full">
                 <Video ref={videoRef} videopath={videoPath} />
                 {currentFile && isAudioFile(currentFile) ? (
-                  <AudioLines progress={progress} lines={lines} />
+                  <AudioLines
+                    progress={progress}
+                    lines={textType === 'transcript' ? lines : translateLines}
+                  />
                 ) : (
                   <VideoText subtitles={currentLine} />
                 )}

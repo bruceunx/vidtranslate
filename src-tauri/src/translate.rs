@@ -47,13 +47,13 @@ pub async fn run_llama(
 
     let (ttx, trx) = mpsc::channel(1);
     let llama_sender = ttx.clone();
-    let whisper_state_clone: Arc<AtomicBool>;
+    let llama_state_clone: Arc<AtomicBool>;
     {
         let mut state = state.lock().await;
         state.llama_sender = Arc::new(Mutex::new(ttx));
         state.llama_recv = Arc::new(Mutex::new(trx));
-        state.whisper_state.store(true, Ordering::SeqCst);
-        whisper_state_clone = Arc::clone(&state.whisper_state);
+        state.llama_state.store(true, Ordering::SeqCst);
+        llama_state_clone = Arc::clone(&state.llama_state);
     }
 
     tauri::async_runtime::spawn(async move {
@@ -64,7 +64,7 @@ pub async fn run_llama(
         };
         llama_sender.send(start).await.expect("error");
         for line in lines {
-            if !whisper_state_clone.load(Ordering::Relaxed) {
+            if !llama_state_clone.load(Ordering::Relaxed) {
                 break;
             }
             let mut new_args = args.clone();
@@ -113,17 +113,11 @@ pub async fn get_llama_txt(state: State<'_, Mutex<VideoState>>) -> Result<DataPa
     }
 }
 
-// #[tauri::command]
-// pub async fn stop_llama(state: State<'_, Mutex<VideoState>>) -> Result<(), String> {
-//     let stop_llama = state.lock().await.stop_llama.clone();
-//     stop_llama.store(true, Ordering::Release);
-//     Ok(())
-// }
 //
 #[tauri::command]
 pub async fn stop_llama(state: State<'_, Mutex<VideoState>>) -> Result<(), String> {
     let state = state.lock().await;
-    state.whisper_state.store(false, Ordering::SeqCst);
+    state.llama_state.store(false, Ordering::SeqCst);
     Ok(())
 }
 
@@ -173,13 +167,13 @@ pub async fn run_llama_stream(
 
     let (ttx, trx) = mpsc::channel(1);
     let llama_sender = ttx.clone();
-    let whisper_state_clone: Arc<AtomicBool>;
+    let llama_state_clone: Arc<AtomicBool>;
     {
         let mut state = state.lock().await;
         state.llama_sender = Arc::new(Mutex::new(ttx));
         state.llama_recv = Arc::new(Mutex::new(trx));
-        state.whisper_state.store(true, Ordering::SeqCst);
-        whisper_state_clone = Arc::clone(&state.whisper_state);
+        state.llama_state.store(true, Ordering::SeqCst);
+        llama_state_clone = Arc::clone(&state.llama_state);
     }
 
     let (mut rx, _) = Command::new_sidecar("llama_stream")
@@ -197,7 +191,7 @@ pub async fn run_llama_stream(
         llama_sender.send(start).await.expect("error");
         let mut idx = 0;
         while let Some(event) = rx.recv().await {
-            if !whisper_state_clone.load(Ordering::Relaxed) {
+            if !llama_state_clone.load(Ordering::Relaxed) {
                 break;
             }
             if let CommandEvent::Stdout(stdout) = event {

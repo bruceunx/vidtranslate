@@ -2,11 +2,11 @@ import * as React from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import ProgressBar from './ProgressBar';
 import TextCards from './TextCards';
-import { TextLine } from '../types';
 import Spinner from './Spinner';
 import Translate from './Translate';
 import { useData } from '../store/DataContext';
-import { AiOutlinePause, AiOutlineSync } from 'react-icons/ai';
+import { AiOutlineSync } from 'react-icons/ai';
+import { HiOutlinePauseCircle } from 'react-icons/hi2';
 
 interface TranscriptProps {
   progress: number;
@@ -15,11 +15,15 @@ interface TranscriptProps {
 
 const Transcript = ({ progress, duration }: TranscriptProps) => {
   const [transformProgress, setTransformProgress] = React.useState(0);
-  const [value, setValue] = React.useState<string>('Transcript');
 
-  const [translatedLines, setTranslatedLines] = React.useState<TextLine[]>([]);
-  const { lines, isInProgress, currentFile, stopWhisper, clearTranscripts } =
-    useData();
+  const {
+    lines,
+    isInProgress,
+    stopWhisper,
+    clearTranscripts,
+    textType,
+    setTextType,
+  } = useData();
 
   React.useEffect(() => {
     if (duration === 0 || lines.length === 0) {
@@ -30,16 +34,12 @@ const Transcript = ({ progress, duration }: TranscriptProps) => {
     setTransformProgress((line['time_start'] / duration) * 100);
   }, [lines]);
 
-  React.useEffect(() => {
-    setValue('transcript');
-  }, [currentFile]);
-
   return (
     <Tabs.Root
       className="flex flex-col w-full h-full"
       defaultValue="transcript"
-      value={value}
-      onValueChange={(value) => setValue(value)}
+      value={textType}
+      onValueChange={(value) => setTextType(value)}
     >
       <Tabs.List className="flex shrink-0 text-gray-400 space-x-5 p-3">
         <Tabs.Trigger
@@ -66,8 +66,11 @@ const Transcript = ({ progress, duration }: TranscriptProps) => {
             <>
               <Spinner size="24px" color="#007bff" thickness="4px" />
               <ProgressBar progress={transformProgress} />
-              <button className="hover:text-gray-400" onClick={stopWhisper}>
-                <AiOutlinePause className="h-7 w-7" />
+              <button
+                className="hover:text-gray-400 rounded-md"
+                onClick={stopWhisper}
+              >
+                <HiOutlinePauseCircle className="h-7 w-7" />
               </button>
             </>
           ) : (
@@ -89,12 +92,7 @@ const Transcript = ({ progress, duration }: TranscriptProps) => {
         value="translate"
         className="h-full p-3 bg-custome-gray-sider rounded-tl-xl"
       >
-        <Translate
-          lines={lines}
-          progress={progress}
-          translatedLines={translatedLines}
-          setTranslatedLines={setTranslatedLines}
-        />
+        <Translate progress={progress} />
       </Tabs.Content>
     </Tabs.Root>
   );

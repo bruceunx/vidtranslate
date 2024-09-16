@@ -20,6 +20,7 @@ struct VideoState {
     llama_sender: Arc<Mutex<mpsc::Sender<translate::DataPayload>>>,
     llama_recv: Arc<Mutex<mpsc::Receiver<translate::DataPayload>>>,
     whisper_state: Arc<AtomicBool>,
+    llama_state: Arc<AtomicBool>,
 }
 
 impl New for VideoState {
@@ -35,7 +36,7 @@ impl New for VideoState {
             llama_sender: Arc::new(Mutex::new(ltx)),
             llama_recv: Arc::new(Mutex::new(lrx)),
             whisper_state: Arc::new(AtomicBool::new(false)),
-            // stop_llama: Arc::new(AtomicBool::new(false)),
+            llama_state: Arc::new(AtomicBool::new(false)),
         };
         return video_state;
     }
