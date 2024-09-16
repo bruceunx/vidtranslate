@@ -6,19 +6,20 @@ import { TextLine } from '../types';
 import Spinner from './Spinner';
 import Translate from './Translate';
 import { useData } from '../store/DataContext';
+import { AiOutlinePause } from 'react-icons/ai';
 
 interface TranscriptProps {
   lines: TextLine[];
   progress: number;
   duration: number;
-  isTransform: boolean;
+  stopWhisper: () => void;
 }
 
 const Transcript = ({
   lines,
   progress,
   duration,
-  isTransform,
+  stopWhisper,
 }: TranscriptProps) => {
   const [transformProgress, setTransformProgress] = React.useState(0);
   const [value, setValue] = React.useState<string>('Transcript');
@@ -67,10 +68,13 @@ const Transcript = ({
         className="h-full p-3 bg-custome-gray-sider rounded-tl-xl"
       >
         <div className="flex flex-row space-x-2 items-center align-bottom p-1 mb-2">
-          {isTransform && (
+          {isInProgress && (
             <>
               <Spinner size="24px" color="#007bff" thickness="4px" />
               <ProgressBar progress={transformProgress} />
+              <button className="hover:text-gray-400" onClick={stopWhisper}>
+                <AiOutlinePause className="h-7 w-7" />
+              </button>
             </>
           )}
         </div>

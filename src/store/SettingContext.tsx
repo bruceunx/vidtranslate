@@ -4,22 +4,24 @@ import { appDataDir } from '@tauri-apps/api/path';
 import { createDir, exists, readTextFile, writeFile } from '@tauri-apps/api/fs';
 
 const initialState: ModelState = {
-  currentWhisperModel: '',
-  currentLlamaModel: '',
+  currentWhisperModel: 'Large Model',
+  currentLlamaModel: 'Madlab Model 3B',
   whisper_models: [
     {
       name: 'Medium Model',
       description: 'Medium quality model supports multi-languages',
       downloadLink:
         'https://ggml.ggerganov.com/ggml-model-whisper-medium-q5_0.bin',
-      localPath: '',
+      localPath:
+        '/Volumes/space/projects/rust/llama-rust-desktop/src-tauri/resources/models/large.bin',
     },
     {
       name: 'Large Model',
       description: 'Medium quality model supports multi-languages',
       downloadLink:
         'https://ggml.ggerganov.com/ggml-model-whisper-large-q5_0.bin',
-      localPath: '',
+      localPath:
+        '/Volumes/space/projects/rust/llama-rust-desktop/src-tauri/resources/models/medium.bin',
     },
   ],
   llama_models: [
@@ -28,7 +30,8 @@ const initialState: ModelState = {
       description: 'Medium quality translation model supports multi-languages',
       downloadLink:
         'https://huggingface.co/notjjustnumbers/madlad400-3b-mt-Q4_K_M-GGUF/resolve/main/madlad400-3b-mt-q4_k_m.gguf?download=true',
-      localPath: '',
+      localPath:
+        '/Volumes/space/projects/rust/llama-rust-desktop/src-tauri/resources/models/llama-model.gguf',
     },
   ],
 };

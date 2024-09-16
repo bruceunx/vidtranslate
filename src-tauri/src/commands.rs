@@ -1,6 +1,7 @@
 use crate::VideoState;
 
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::State;
 use tokio::sync::{mpsc, Mutex};
 
@@ -129,14 +130,20 @@ pub async fn run_whisper(
 
     let (ttx, trx) = mpsc::channel(1);
     let tx_clone = ttx.clone();
+    let whisper_state_clone: Arc<AtomicBool>;
     {
         let mut state = state.lock().await;
         state.tsender = Arc::new(Mutex::new(ttx));
         state.trecv = Arc::new(Mutex::new(trx));
+        state.whisper_state.store(true, Ordering::SeqCst);
+        whisper_state_clone = Arc::clone(&state.whisper_state);
     }
     tauri::async_runtime::spawn(async move {
         tx_clone.send("start".to_string()).await.expect("error");
         while let Some(event) = rx.recv().await {
+            if !whisper_state_clone.load(Ordering::Relaxed) {
+                break;
+            }
             if let CommandEvent::Stdout(line) = event {
                 if tx_clone.send(line).await.is_err() {
                     break;
@@ -153,12 +160,8 @@ pub async fn run_whisper(
 
 #[tauri::command]
 pub async fn stop_whisper(state: State<'_, Mutex<VideoState>>) -> Result<(), String> {
-    let (ttx, trx) = mpsc::channel(1);
-    {
-        let mut state = state.lock().await;
-        state.tsender = Arc::new(Mutex::new(ttx));
-        state.trecv = Arc::new(Mutex::new(trx));
-    }
+    let state = state.lock().await;
+    state.whisper_state.store(false, Ordering::SeqCst);
     Ok(())
 }
 

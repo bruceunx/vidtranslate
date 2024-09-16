@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
 import {
   writeFile,
   readTextFile,
@@ -9,6 +10,8 @@ import {
 import { appCacheDir } from '@tauri-apps/api/path';
 
 import { Item, TextLine } from '../types';
+import { useSettingData } from './SettingContext';
+import { transformString } from '../utils/transript';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface Action {
@@ -68,6 +71,8 @@ const reducer = (state: State, action: Action): State => {
 
 interface DataContextType {
   items: Item[];
+  lines: TextLine[];
+  currentLine: string;
   isInProgress: boolean;
   currentFile: string;
   setCurrentFile: (file: string | null) => void;
@@ -76,10 +81,17 @@ interface DataContextType {
   updateItem: (textlines: TextLine[] | null) => void;
   updateTranslateFile: (textlines: TextLine[] | null) => void;
   updateProgress: (state: boolean | null) => void;
+  setLang: (lang: string) => void;
+  handleWhisper: (file: string) => void;
+  setLines: React.Dispatch<React.SetStateAction<TextLine[]>>;
+  setCurrentLine: React.Dispatch<React.SetStateAction<string>>;
+  stopWhisper: () => void;
 }
 
 const DataContext = React.createContext<DataContextType>({
   items: [],
+  lines: [],
+  currentLine: '',
   isInProgress: false,
   currentFile: '',
   setCurrentFile: () => {},
@@ -88,13 +100,64 @@ const DataContext = React.createContext<DataContextType>({
   updateTranslateFile: () => {},
   deleteItem: () => {},
   updateProgress: () => {},
+  setLang: () => {},
+  handleWhisper: () => {},
+  setLines: () => {},
+  setCurrentLine: () => {},
+  stopWhisper: () => {},
 });
 
 const DataProvider = ({ children }: { children: React.ReactNode }) => {
-  const [fileSignal, setFileSignal] = React.useState<boolean>(false);
-
-  const [state, dispatch] = React.useReducer(reducer, initialState);
   const fileName = 'tempData.json';
+  const { state: settingState } = useSettingData();
+  const [lang, setLang] = React.useState<string>('auto');
+  const [fileSignal, setFileSignal] = React.useState<boolean>(false);
+  const [state, dispatch] = React.useReducer(reducer, initialState);
+
+  const [lines, setLines] = React.useState<TextLine[]>([]);
+  const [currentLine, setCurrentLine] = React.useState<string>('');
+
+  const stopWhisper = async () => {
+    await invoke('stop_whisper');
+    updateProgress(false);
+  };
+
+  const handleWhisper = async (file: string) => {
+    updateProgress(true);
+    if (settingState.currentWhisperModel === '') return;
+    const models = settingState.whisper_models.filter(
+      (model) => model.name === settingState.currentWhisperModel
+    );
+    if (models.length === 0) return;
+    const modelPath = models[0].localPath;
+
+    const run_ffmpeg_info: string = await invoke('run_ffmpeg', {
+      file_path: file,
+    });
+    const newLines = [];
+    if (run_ffmpeg_info === 'ok') {
+      await invoke('run_whisper', { model_path: modelPath, lang: lang });
+      let line: string;
+      let id = 0;
+      do {
+        line = await invoke('get_whisper_txt');
+        if (line === 'end') break;
+        if (id === 0 && line === 'start') {
+          id += 1;
+          continue;
+        }
+        const line_text = transformString(line);
+        if (id === 0) setCurrentLine(line_text?.text_str || '');
+        if (line_text !== null) {
+          setLines((prev) => [...prev, line_text]);
+          newLines.push(line_text);
+        }
+        id += 1;
+      } while (line);
+    }
+    if (newLines.length > 0) updateItem(newLines);
+    updateProgress(false);
+  };
 
   const updateFile = async () => {
     const dir = await appCacheDir();
@@ -192,11 +255,18 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         items: state.items,
         isInProgress: state.isInProgress,
+        lines,
+        currentLine,
         insertItem,
         deleteItem,
         updateItem,
         updateProgress,
         updateTranslateFile,
+        setLines,
+        setCurrentLine,
+        setLang,
+        handleWhisper,
+        stopWhisper,
         currentFile: state.currentFile,
         setCurrentFile: (file: string | null) =>
           dispatch({ type: 'SET_CURRENT_FILE', payload: file }),

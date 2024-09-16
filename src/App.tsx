@@ -26,39 +26,42 @@ import {
   readTranscript,
   saveToFile,
 } from './utils/file';
-import { transformString } from './utils/transript';
-import { Item, TextLine } from './types';
+import { Item } from './types';
 import VideoText from './components/VideoText';
 import VidoItems from './components/VideoItems';
 import { useData } from './store/DataContext';
 import AudioLines from './components/AudioLines';
 import Settings from './components/Setting';
-import { useSettingData } from './store/SettingContext';
+import { useMediaMetadata } from './hooks/useMediaMetadata';
 
 function App() {
-  const [lang, setLang] = React.useState<string>('auto');
   const [isDragging, setIsDragging] = React.useState<boolean>(false);
   const [isPlay, setIsPlay] = React.useState<boolean>(false);
   const [showRightSider, setShowRightSider] = React.useState<boolean>(true);
 
-  const [videoDuration, setVideoDuration] = React.useState<number>(0);
   const [currentLocation, setCurrentLocation] = React.useState<number>(0);
   const [progress, setProgress] = React.useState<number>(0);
 
   const [videoPath, setVideoPath] = React.useState<string>('');
   const [rawPath, setRawPath] = React.useState<string>('');
 
-  const [lines, setLines] = React.useState<TextLine[]>([]);
-  const [currentLine, setCurrentLine] = React.useState<string>('');
-
   const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const { videoDuration, loadMediaMetadata, setVideoDuration } =
+    useMediaMetadata();
 
   const {
     items,
+    lines,
+    currentLine,
     isInProgress,
     updateProgress,
     insertItem,
-    updateItem,
+    setLang,
+    handleWhisper,
+    stopWhisper,
+    setLines,
+    setCurrentLine,
     setCurrentFile,
     currentFile,
     deleteItem,
@@ -77,8 +80,6 @@ function App() {
       await saveToFile(filePath, lines);
     }
   };
-
-  const { state } = useSettingData();
 
   const handleInsertItem = async (
     file: string,
@@ -99,54 +100,10 @@ function App() {
     insertItem(item);
   };
 
-  const loadMediaMetadata = async (file: string): Promise<number> => {
-    const info: string = await invoke('run_ffprobe', { file_path: file });
-    const timeInfo = parseInt(info) * 1000;
-    setVideoDuration(timeInfo);
-    return timeInfo;
-  };
-
-  const handleWhisper = async (file: string) => {
-    if (state.currentWhisperModel === '') return;
-    const models = state.whisper_models.filter(
-      (model) => model.name === state.currentWhisperModel
-    );
-    if (models.length === 0) return;
-    const modelPath = models[0].localPath;
-
-    const run_ffmpeg_info: string = await invoke('run_ffmpeg', {
-      file_path: file,
-    });
-    const newLines = [];
-
-    if (run_ffmpeg_info === 'ok') {
-      await invoke('run_whisper', { model_path: modelPath, lang: lang });
-      let line: string;
-      let id = 0;
-      do {
-        line = await invoke('get_whisper_txt');
-        if (line === 'end') break;
-        if (id === 0 && line === 'start') {
-          id += 1;
-          continue;
-        }
-        const line_text = transformString(line);
-        if (id === 0) setCurrentLine(line_text?.text_str || '');
-        if (line_text !== null) {
-          setLines((prev) => [...prev, line_text]);
-          newLines.push(line_text);
-        }
-        id += 1;
-      } while (line);
-    }
-    if (newLines.length > 0) updateItem(newLines);
-  };
-
   const transformVideo = async (file: string, fileName: string) => {
     const timeInfo = await loadMediaMetadata(file);
     handleInsertItem(file, fileName, timeInfo);
-    await handleWhisper(file);
-    updateProgress(false);
+    handleWhisper(file);
   };
 
   const handleMediaLoad = async (file: string) => {
@@ -339,9 +296,7 @@ function App() {
         setLines(_lines);
         setCurrentLine(_lines[0].text_str);
       } else {
-        updateProgress(true);
-        await handleWhisper(item.filePath);
-        updateProgress(false);
+        handleWhisper(item.filePath);
       }
     };
     if (currentFile === '') {
@@ -470,8 +425,8 @@ function App() {
                 <Transcript
                   progress={progress}
                   lines={lines}
-                  isTransform={isInProgress}
                   duration={videoDuration}
+                  stopWhisper={stopWhisper}
                 />
               </div>
             )}

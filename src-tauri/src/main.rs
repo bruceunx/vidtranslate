@@ -4,7 +4,7 @@ mod commands;
 mod db;
 mod translate;
 mod video;
-// use std::sync::{atomic::AtomicBool, Arc};
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 use tokio::sync::{mpsc, Mutex};
 
@@ -19,7 +19,7 @@ struct VideoState {
     trecv: Arc<Mutex<mpsc::Receiver<String>>>,
     llama_sender: Arc<Mutex<mpsc::Sender<translate::DataPayload>>>,
     llama_recv: Arc<Mutex<mpsc::Receiver<translate::DataPayload>>>,
-    // stop_llama: Arc<AtomicBool>,
+    whisper_state: Arc<AtomicBool>,
 }
 
 impl New for VideoState {
@@ -34,6 +34,7 @@ impl New for VideoState {
             trecv: Arc::new(Mutex::new(trx)),
             llama_sender: Arc::new(Mutex::new(ltx)),
             llama_recv: Arc::new(Mutex::new(lrx)),
+            whisper_state: Arc::new(AtomicBool::new(false)),
             // stop_llama: Arc::new(AtomicBool::new(false)),
         };
         return video_state;
