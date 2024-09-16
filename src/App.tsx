@@ -59,7 +59,6 @@ function App() {
     insertItem,
     setLang,
     handleWhisper,
-    stopWhisper,
     setLines,
     setCurrentLine,
     setCurrentFile,
@@ -422,12 +421,7 @@ function App() {
             </div>
             {showRightSider && (
               <div className="flex flex-col w-full bg-custome-gray-dark">
-                <Transcript
-                  progress={progress}
-                  lines={lines}
-                  duration={videoDuration}
-                  stopWhisper={stopWhisper}
-                />
+                <Transcript progress={progress} duration={videoDuration} />
               </div>
             )}
           </div>

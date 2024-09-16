@@ -96,6 +96,7 @@ interface DataContextType {
   setLines: React.Dispatch<React.SetStateAction<TextLine[]>>;
   setCurrentLine: React.Dispatch<React.SetStateAction<string>>;
   stopWhisper: () => void;
+  clearTranscripts: () => void;
 }
 
 const DataContext = React.createContext<DataContextType>({
@@ -115,6 +116,7 @@ const DataContext = React.createContext<DataContextType>({
   setLines: () => {},
   setCurrentLine: () => {},
   stopWhisper: () => {},
+  clearTranscripts: () => {},
 });
 
 const DataProvider = ({ children }: { children: React.ReactNode }) => {
@@ -130,6 +132,12 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const stopWhisper = async () => {
     await invoke('stop_whisper');
     updateProgress(false);
+  };
+
+  const clearTranscripts = async () => {
+    dispatch({ type: 'UPDATE_ITEM', payload: '' });
+    setLines([]);
+    await handleWhisper(state.currentFile);
   };
 
   const handleWhisper = async (file: string) => {
@@ -170,7 +178,6 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateFile = async () => {
-    console.log('updateFile');
     const dir = await appCacheDir();
     const filePath = `${dir}${fileName}`;
     await writeFile({ path: filePath, contents: JSON.stringify(state.items) });
@@ -217,7 +224,6 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const updateItem = async (textlines: TextLine[] | null) => {
     if (textlines === null) return;
     const filePath = await saveTranscriptsToJSON(textlines);
-    console.log('updateItem', filePath);
     dispatch({ type: 'UPDATE_ITEM', payload: filePath });
   };
 
@@ -277,6 +283,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
         setLang,
         handleWhisper,
         stopWhisper,
+        clearTranscripts,
         currentFile: state.currentFile,
         setCurrentFile: (file: string | null) =>
           dispatch({ type: 'SET_CURRENT_FILE', payload: file }),
