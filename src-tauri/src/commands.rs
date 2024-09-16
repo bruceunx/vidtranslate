@@ -142,6 +142,7 @@ pub async fn run_whisper(
         tx_clone.send("start".to_string()).await.expect("error");
         while let Some(event) = rx.recv().await {
             if !whisper_state_clone.load(Ordering::Relaxed) {
+                tx_clone.send("end".to_string()).await.expect("error");
                 break;
             }
             if let CommandEvent::Stdout(line) = event {
@@ -173,6 +174,7 @@ pub async fn get_whisper_txt(state: State<'_, Mutex<VideoState>>) -> Result<Stri
     };
 
     let var = rx_clone.lock().await.recv().await;
+    println!("get whisper_txt:  {:?}", &var);
     match var {
         Some(chunk) => Ok(chunk),
         None => Err("No more data".into()),

@@ -56,13 +56,23 @@ const reducer = (state: State, action: Action): State => {
       };
     case 'UPDATE_ITEM': {
       const updatedItems = [...state.items];
-      updatedItems[updatedItems.length - 1].transcripts = action.payload;
-      return { ...state, items: updatedItems };
+      const newItems = updatedItems.map((item) => {
+        if (item.filePath === state.currentFile) {
+          item.transcripts = action.payload;
+        }
+        return item;
+      });
+      return { ...state, items: newItems };
     }
     case 'UPDATE_TRANS_ITEM': {
       const updatedItems = [...state.items];
-      updatedItems[updatedItems.length - 1].translate = action.payload;
-      return { ...state, items: updatedItems };
+      const newItems = updatedItems.map((item) => {
+        if (item.filePath === state.currentFile) {
+          item.translate = action.payload;
+        }
+        return item;
+      });
+      return { ...state, items: newItems };
     }
     default:
       return state;
@@ -111,11 +121,11 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const fileName = 'tempData.json';
   const { state: settingState } = useSettingData();
   const [lang, setLang] = React.useState<string>('auto');
-  const [fileSignal, setFileSignal] = React.useState<boolean>(false);
   const [state, dispatch] = React.useReducer(reducer, initialState);
 
   const [lines, setLines] = React.useState<TextLine[]>([]);
   const [currentLine, setCurrentLine] = React.useState<string>('');
+  const hasMounted = React.useRef(false);
 
   const stopWhisper = async () => {
     await invoke('stop_whisper');
@@ -160,6 +170,7 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const updateFile = async () => {
+    console.log('updateFile');
     const dir = await appCacheDir();
     const filePath = `${dir}${fileName}`;
     await writeFile({ path: filePath, contents: JSON.stringify(state.items) });
@@ -180,7 +191,6 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const insertItem = (item: Item | null) => {
     if (item === null) return;
     dispatch({ type: 'ADD_ITEM', payload: item });
-    setFileSignal(true);
   };
 
   const deleteItem = async (fileName: string | null) => {
@@ -197,7 +207,6 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
       if (_isFile) await removeFile(translatePath);
     }
     dispatch({ type: 'DELETE_ITEM', payload: fileName });
-    setFileSignal(true);
   };
 
   const updateProgress = (state: boolean | null) => {
@@ -208,15 +217,14 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   const updateItem = async (textlines: TextLine[] | null) => {
     if (textlines === null) return;
     const filePath = await saveTranscriptsToJSON(textlines);
+    console.log('updateItem', filePath);
     dispatch({ type: 'UPDATE_ITEM', payload: filePath });
-    setFileSignal(true);
   };
 
   const updateTranslateFile = async (textlines: TextLine[] | null) => {
     if (textlines === null) return;
     const filePath = await saveTranscriptsToJSON(textlines);
     dispatch({ type: 'UPDATE_TRANS_ITEM', payload: filePath });
-    setFileSignal(true);
   };
 
   const loadItems = async () => {
@@ -244,11 +252,13 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   React.useEffect(() => {
-    if (fileSignal) {
-      updateFile();
-      setFileSignal(false);
+    console.log('hasMounted.current ', state);
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
     }
-  }, [fileSignal]);
+    updateFile();
+  }, [state]);
 
   return (
     <DataContext.Provider
