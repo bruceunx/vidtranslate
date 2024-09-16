@@ -320,6 +320,16 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
     updateFile();
   }, [state]);
 
+  // not in play state?
+  React.useEffect(() => {
+    if (textType === 'transcript' && lines.length > 0) {
+      setCurrentLine(lines[0].text_str || '');
+    }
+    if (textType === 'translate' && translateLines.length > 0) {
+      setCurrentLine(translateLines[0].text_str || '');
+    }
+  }, [textType]);
+
   React.useEffect(() => {
     const handleCurrentFile = async (item: Item) => {
       const _lines = await readTranscript(item.transcripts);
@@ -328,6 +338,11 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
         const _translateLines = await readTranscript(item.translate);
         if (_translateLines.length > 0) {
           setTranslateLines(_translateLines);
+        }
+        if (textType === 'translate') {
+          setCurrentLine(_translateLines[0].text_str || '');
+        } else {
+          setCurrentLine(_lines[0].text_str || '');
         }
       } else {
         handleWhisper(item.filePath);
