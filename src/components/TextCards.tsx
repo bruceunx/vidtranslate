@@ -3,6 +3,7 @@ import { TextLine } from '../types';
 import { formatTime } from '../utils/file';
 
 interface TextCardProps {
+  id: string;
   activate: boolean;
   time_start: number;
   time_end: number;
@@ -10,13 +11,17 @@ interface TextCardProps {
 }
 
 const TextCard: React.FC<TextCardProps> = ({
+  id,
   activate,
   time_start,
   time_end,
   text_str,
 }: TextCardProps) => {
   return (
-    <p className={`${activate ? 'bg-[#155c9a]' : ''} p-1 text-gray-200`}>
+    <p
+      id={id}
+      className={`${activate ? 'bg-[#155c9a]' : ''} p-1 text-gray-200`}
+    >
       <small className="text-sm text-gray-400 p-1 bg-gray-900 rounded-md mr-2 w-20">
         {formatTime(time_start)}-{formatTime(time_end)}
       </small>
@@ -52,11 +57,19 @@ const TextCards = ({ lines, progress, margin }: TextCardsProps) => {
         (obj) => obj.time_start <= progress && obj.time_end >= progress
       );
       if (targetIndex === -1) return;
-      const percentIndex = targetIndex / lines.length;
-      const height = (container.clientHeight * 90) / 100;
-      const targetScrollTop =
-        Math.floor((container.scrollHeight * percentIndex) / height) * height;
-      container.scrollTop = targetScrollTop;
+      const lyricElement = document.getElementById(`text-${targetIndex}`);
+      if (lyricElement && container) {
+        const lyricTop = lyricElement.offsetTop;
+        const lyricBottom = lyricElement.offsetTop + lyricElement.offsetHeight;
+        const containerTop = container.scrollTop;
+        const containerBottom = container.scrollTop + container.clientHeight;
+        if (lyricTop < containerTop || lyricBottom > containerBottom) {
+          container.scrollTo({
+            top: lyricElement.offsetTop - container.offsetTop,
+            behavior: 'smooth',
+          });
+        }
+      }
     }
   }, [progress]);
 
@@ -69,6 +82,7 @@ const TextCards = ({ lines, progress, margin }: TextCardsProps) => {
       >
         {lines.map((line, index) => (
           <TextCard
+            id={`text-${index}`}
             key={index}
             activate={line.time_start <= progress && line.time_end >= progress}
             time_start={line.time_start}
