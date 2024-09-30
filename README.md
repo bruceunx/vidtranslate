@@ -39,3 +39,7 @@
 - [x] add stop button to transcripts and translates
 - [x] add license
 - [ ] finish setting download models etc
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See the LICENSE file for details.
