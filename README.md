@@ -1,4 +1,16 @@
+<style>
+  img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+</style>
+
 # VidTranslate
+
+![](./docs/image2.png)
+![](./docs/image3.png)
+![](./docs/image1.png)
 
 ## Whisper Models for stt
 

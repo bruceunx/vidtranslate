@@ -174,7 +174,6 @@ pub async fn get_whisper_txt(state: State<'_, Mutex<VideoState>>) -> Result<Stri
     };
 
     let var = rx_clone.lock().await.recv().await;
-    println!("get whisper_txt:  {:?}", &var);
     match var {
         Some(chunk) => Ok(chunk),
         None => Err("No more data".into()),

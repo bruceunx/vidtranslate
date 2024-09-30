@@ -184,8 +184,10 @@ const DataProvider = ({ children }: { children: React.ReactNode }) => {
       if (line.text_str === 'end') break;
       if (line.text_str === 'start') {
         setTranslateLines([]);
-        setCurrentLine(line?.text_str || '');
         continue;
+      }
+      if (newLines.length == 1) {
+        setCurrentLine(newLines[0].text_str || '');
       }
       setTranslateLines((prev) => [...prev, line]);
       newLines.push(line);
