@@ -1,5 +1,16 @@
 # VidTranslate
 
+## AI-Powered Desktop App for Text Extraction and Translation
+
+    A desktop application for macOS and Windows that utilizes local AI models like whisper.cpp for speech-to-text extraction and llama.cpp for text translation. The app can process both audio and video files, converting speech to text and translating the extracted text into multiple languages without requiring cloud services.
+
+## Key Features
+
+- Audio/Video to Text: Extracts text from audio and video files using whisper.cpp, a local implementation of OpenAI's Whisper for speech-to-text.
+- Text Translation: Translates the extracted text into various languages using llama.cpp and a local translation model.
+- Completely Offline: All processing is done locally, so there's no need for an internet connection.
+- Cross-Platform: Runs on both macOS and Windows.
+
 ![](./docs/image2.png)
 ![](./docs/image3.png)
 ![](./docs/image1.png)
